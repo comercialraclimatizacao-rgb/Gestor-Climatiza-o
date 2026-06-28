@@ -1,0 +1,6 @@
+{
+  "name": "R.A Climatização",
+  "description": "Sistema profissional de gestão para manutenção de ar-condicionado com cadastro de clientes, equipamentos, ordens de serviço, orçamentos, estoque e auditoria de extratos.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

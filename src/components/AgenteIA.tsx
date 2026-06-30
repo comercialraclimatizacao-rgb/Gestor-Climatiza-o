@@ -25,7 +25,7 @@ export default function AgenteIA({ clientes, equipamentos }: AgenteIAProps) {
   // Custom Variables for Persuasion Engine
   const [schedulingLink, setSchedulingLink] = useState(() => {
     const saved = localStorage.getItem('clima_ia_scheduling_link');
-    return saved || 'https://agendar.climatech.com.br/visita';
+    return saved || '988134216';
   });
   
   const [recurrenceMonths, setRecurrenceMonths] = useState<number>(() => {
@@ -94,22 +94,22 @@ export default function AgenteIA({ clientes, equipamentos }: AgenteIAProps) {
       {
         id: 'saude',
         titulo: 'Opção 1: Foco na Saúde 🍃',
-        mensagem: `Olá, *${name}*! Faz tempo que seu ar-condicionado *${brand}* no(a) *${loc}* não passa por uma limpeza. Garanta um ar puro e saudável para sua família hoje mesmo. Vamos agendar a manutenção preventiva? 🍃${couponSuffix}\n\n👉 Agende diretamente pelo nosso link: ${schedulingLink}`
+        mensagem: `❄️ *REVISÃO DE HIGIENIZAÇÃO* ❄️\n\nOlá, *${name}*! Tudo bem? 😊\n\nNotamos que já faz um tempo que o seu ar-condicionado *${brand}* no(a) *${loc}* não passa por uma higienização profissional.\n\nCuidar do seu aparelho é proteger quem você ama! Veja o que uma limpeza completa faz por você:\n\n🍃 *SAÚDE EM PRIMEIRO LUGAR:*\n✅ *Ar Puro de Verdade:* Elimina 99,9% de ácaros, fungos, vírus e poeira acumulada.\n✅ *Adeus Alergias:* Previne crises de asma, rinite, tosse e ressecamento das vias respiratórias.\n✅ *Ambiente Saudável:* Garante um ar higienizado e livre de odores desagradáveis.${couponSuffix}\n\n👉 Quer respirar um ar mais puro hoje? Garanta seu horário!\nChama no WhatsApp: ${schedulingLink}`
       },
       {
         id: 'energia',
         titulo: 'Opção 2: Foco na Economia ⚡',
-        mensagem: `Oi, *${name}*! Sabia que ar-condicionado sujo gasta até 30% mais energia? Evite surpresas na conta de luz e quebras repentinas do seu *${brand}* no(a) *${loc}*. Que tal agendar sua revisão para esta semana? ⚡${couponSuffix}\n\n👉 Escolha seu melhor horário: ${schedulingLink}`
+        mensagem: `⚡ *SEU AR-CONDICIONADO PODE ESTAR PESANDO NO BOLSO!* ⚡\n\nOi, *${name}*! Sabia que a falta de higienização do seu *${brand}* no(a) *${loc}* pode estar aumentando sua conta de luz em até *30%*?\n\nQuando o filtro e a serpentina acumulam poeira, o motor precisa trabalhar o dobro para refrigerar o ambiente!\n\n💰 *SUA ECONOMIA GARANTIDA:*\n✅ *Conta de Luz Menor:* Reduz o consumo de energia elétrica em até *30%* imediatamente!\n✅ *Maior Durabilidade:* Evita quebras inesperadas e consertos caros no compressor.\n✅ *Super Resfriamento:* O aparelho volta a gelar muito mais rápido e com mais força.${couponSuffix}\n\n👉 Não gaste dinheiro à toa! Agende sua manutenção preventiva agora.\nChama no WhatsApp: ${schedulingLink}`
       },
       {
         id: 'direto',
         titulo: 'Opção 3: Lembrete Rápido 📅',
-        mensagem: `Hora da revisão! *${name}*, já se passaram *${recurrenceMonths}* meses desde a sua última manutenção de ar-condicionado no seu *${brand}* no(a) *${loc}*. Proteja seu aparelho e agende seu horário pelo link: ${schedulingLink} 📅${couponSuffix}`
+        mensagem: `📅 *LEMBRETE DE MANUTENÇÃO PREVENTIVA R.A CLIMATIZAÇÃO* 📅\n\nOlá, *${name}*! Passando para te lembrar que já se passaram *${recurrenceMonths} meses* desde a última higienização preventiva do seu ar-condicionado *${brand}* no(a) *${loc}*.\n\nPara manter o aparelho funcionando perfeitamente, o recomendado é a revisão a cada 6 meses.\n\n⚙️ *VANTAGENS DA HIGIENIZAÇÃO:*\n❄️ *Ar mais gelado e saudável* para sua casa.\n📉 *Queda imediata de até 30%* no consumo de energia.\n🛠️ *Evita a queima* de peças vitais do aparelho.${couponSuffix}\n\n👉 Vamos agendar a sua revisão para esta semana? É rápido e limpo!\nChama no WhatsApp: ${schedulingLink}`
       },
       {
         id: 'beneficios',
         titulo: 'Opção 4: Benefícios Claros ✨',
-        mensagem: `Olá, *${name}*! Sabia que a higienização regular do seu ar-condicionado traz benefícios claros para a sua saúde e economia? Reduz poeira, ácaros, bactérias e o consumo de energia em até 30%. Que tal agendarmos? 🌬️${couponSuffix}\n\n👉 Agende rápido por aqui: ${schedulingLink}`
+        mensagem: `✨ *HIGIENIZAÇÃO COMPLETA: MAIS SAÚDE & MAIS ECONOMIA!* ✨\n\nOlá, *${name}*! Que tal cuidar do seu conforto, da sua saúde e do seu bolso hoje?\n\nA higienização regular do seu ar-condicionado *${brand}* no(a) *${loc}* traz benefícios imediatos que você sente no dia a dia:\n\n📊 *VEJA OS BENEFÍCIOS:*\n🩺 *SAÚDE:* Ar 100% livre de ácaros, bactérias e impurezas causadoras de alergias.\n💵 *ECONOMIA:* Consumo de energia reduzido em até *30%* e prevenção de quebras caras.\n💨 *DESEMPENHO:* Aparelho gelando muito mais rápido e com fluxo de ar ideal.${couponSuffix}\n\n👉 Deixe seu ar-condicionado como novo! Reserve o seu horário técnico.\nChama no WhatsApp: ${schedulingLink}`
       }
     ];
   };
@@ -214,13 +214,13 @@ export default function AgenteIA({ clientes, equipamentos }: AgenteIAProps) {
 
     switch(activeKitTab) {
       case 'desconto':
-        return `🎉 *CONDIÇÃO EXCLUSIVA R.A CLIMATIZAÇÃO* 🎉\n\nOlá, *${clientName}*! Tudo bem?\n\nAnalisamos nossos registros e vimos que seu ar-condicionado *${brandName}* no(a) *${local}* está no período de manutenção preventiva de *${recurrenceMonths} meses*.\n\nPara te ajudar a manter o ar puro e economizar até 30% na luz, liberamos um cupom de desconto de *10% OFF* válido apenas para agendamentos fechados esta semana!\n\n🎟️ Cupom: *${couponCode}*\n⏱️ Validade: Até sexta-feira\n\n👉 Escolha seu horário e agende com desconto agora: ${schedulingLink}\n\nGaranta a saúde da sua família e durabilidade do seu aparelho!`;
+        return `🎉 *CONDIÇÃO EXCLUSIVA R.A CLIMATIZAÇÃO* 🎉\n\nOlá, *${clientName}*! Tudo bem?\n\nAnalisamos nossos registros e vimos que seu ar-condicionado *${brandName}* no(a) *${local}* está no período de manutenção preventiva de *${recurrenceMonths} meses*.\n\nPara te ajudar a manter o ar puro e economizar até 30% na luz, liberamos um cupom de desconto de *10% OFF* válido apenas para agendamentos fechados esta semana!\n\n🎟️ Cupom: *${couponCode}*\n⏱️ Validade: Até sexta-feira\n\n👉 Chama no WhatsApp: ${schedulingLink}\n\nGaranta a saúde da sua família e durabilidade do seu aparelho!`;
       
       case 'sequencia':
-        return `⚠️ *FLUXO DE REATIVAÇÃO EM 2 ETAPAS* ⚠️\n\n--- [LEMBRETE 1 - ENVIAR HOJE] ---\nOlá, *${clientName}*! Notamos que já fazem *${recurrenceMonths} meses* desde a última higienização preventiva do seu ar-condicionado *${brandName} (${local})*.\n\nA sujeira oculta no filtro força o motor e reduz a qualidade do ar da sua casa. Vamos deixar agendada uma limpeza rápida para esta semana?\n👉 Link de agendamento: ${schedulingLink}\n\n--- [LEMBRETE 2 - ENVIAR SE NÃO RESPONDER EM 48H] ---\nOi, *${clientName}*! Passando apenas para lembrar que a agenda de manutenção técnica preventiva da R.A Climatização para esta semana está quase esgotada. 🌬️\n\nNão deixe seu aparelho trabalhar forçado e gastar mais energia à toa. Queremos resguardar seu horário técnico com prioridade!\n👉 Garanta sua vaga agora pelo link: ${schedulingLink}`;
+        return `⚠️ *FLUXO DE REATIVAÇÃO EM 2 ETAPAS* ⚠️\n\n--- [LEMBRETE 1 - ENVIAR HOJE] ---\nOlá, *${clientName}*! Notamos que já fazem *${recurrenceMonths} meses* desde a última higienização preventiva do seu ar-condicionado *${brandName} (${local})*.\n\nA sujeira oculta no filtro força o motor e reduz a qualidade do ar da sua casa. Vamos deixar agendada uma limpeza rápida para esta semana?\n👉 Chama no WhatsApp: ${schedulingLink}\n\n--- [LEMBRETE 2 - ENVIAR SE NÃO RESPONDER EM 48H] ---\nOi, *${clientName}*! Passando apenas para lembrar que a agenda de manutenção técnica preventiva da R.A Climatização para esta semana está quase esgotada. 🌬️\n\nNão deixe seu aparelho trabalhar forçado e gastar mais energia à toa. Queremos resguardar seu horário técnico com prioridade!\n👉 Chama no WhatsApp: ${schedulingLink}`;
       
       case 'redes':
-        return `🌬️ *VOCÊ SABIA? O PERIGO OCULTO NO SEU AR-CONDICIONADO!* 🌬️\n\nMuitas pessoas esperam o ar-condicionado quebrar ou parar de esfriar para chamar um técnico. Mas você sabia que a falta de higienização regular traz riscos graves e silenciosos?\n\n📌 *1. Riscos à Saúde:* Filtros sujos acumulam ácaros, fungos, poeira e bactérias, sendo um gatilho para rinites, asma e alergias severas.\n\n📌 *2. Bolso Apertado:* Um aparelho sujo precisa trabalhar o dobro para resfriar, o que aumenta em até *30% o consumo de energia elétrica* na sua conta!\n\n📌 *3. Prejuízo Grande:* A poeira obstrui as saídas e força o compressor, podendo queimar a peça mais cara do aparelho. Cuidar preventivamente evita gastos urgentes e caros.\n\n💡 *Dica de Ouro R.A Climatização:* Faça a higienização a cada 6 ou 12 meses. É rápido, limpo e protege sua saúde e seu bolso.\n\n👉 Precisa higienizar seu aparelho? Agende em segundos com nossos especialistas no link da bio ou acesse: ${schedulingLink}\n\n#RAClimatizacao #ArCondicionado #ArPuro #ManutencaoPreventiva #EconomiaDeEnergia #BemEstar #Higienizacao`;
+        return `🌬️ *VOCÊ SABIA? O PERIGO OCULTO NO SEU AR-CONDICIONADO!* 🌬️\n\nMuitas pessoas esperam o ar-condicionado quebrar ou parar de esfriar para chamar um técnico. Mas você sabia que a falta de higienização regular traz riscos graves e silenciosos?\n\n📌 *1. Riscos à Saúde:* Filtros sujos acumulam ácaros, fungos, poeira e bactérias, sendo um gatilho para rinites, asma e alergias severas.\n\n📌 *2. Bolso Apertado:* Um aparelho sujo precisa trabalhar o dobro para resfriar, o que aumenta em até *30% o consumo de energia elétrica* na sua conta!\n\n📌 *3. Prejuízo Grande:* A poeira obstrui as saídas e força o compressor, podendo queimar a peça mais cara do aparelho. Cuidar preventivamente evita gastos urgentes e caros.\n\n💡 *Dica de Ouro R.A Climatização:* Faça a higienização a cada 6 ou 12 meses. É rápido, limpo e protege sua saúde e seu bolso.\n\n👉 Precisa higienizar seu aparelho? Agende em segundos com nossos especialistas! Chama no WhatsApp: ${schedulingLink}\n\n#RAClimatizacao #ArCondicionado #ArPuro #ManutencaoPreventiva #EconomiaDeEnergia #BemEstar #Higienizacao`;
       default:
         return '';
     }
@@ -331,15 +331,15 @@ export default function AgenteIA({ clientes, equipamentos }: AgenteIAProps) {
               {/* Scheduling Link Input */}
               <div>
                 <label className="block text-[11px] font-bold text-slate-600 mb-1 flex items-center justify-between">
-                  <span>Link de Agendamento (Calendário)</span>
-                  <span className="text-[9px] text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded-md font-semibold">Facilitador</span>
+                  <span>Celular da Empresa (WhatsApp)</span>
+                  <span className="text-[9px] text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded-md font-semibold">WhatsApp</span>
                 </label>
                 <input
                   type="text"
                   value={schedulingLink}
                   onChange={(e) => setSchedulingLink(e.target.value)}
                   className="w-full text-xs p-2 rounded-lg border border-slate-200 bg-slate-50 font-mono text-slate-700 focus:bg-white focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-hidden transition"
-                  placeholder="Link do calendário"
+                  placeholder="Número de celular da empresa"
                 />
               </div>
 

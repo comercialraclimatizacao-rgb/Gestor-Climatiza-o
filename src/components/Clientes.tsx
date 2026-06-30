@@ -43,6 +43,23 @@ export default function Clientes({
   const [observacoes, setObservacoes] = useState('');
   const [status, setStatus] = useState<'ativo' | 'inativo'>('ativo');
 
+  const alert = (msg: string) => {
+    try {
+      window.alert(msg);
+    } catch (e) {
+      console.warn("Alert blocked by sandbox, logged message:", msg, e);
+    }
+  };
+
+  const confirm = (msg: string): boolean => {
+    try {
+      return window.confirm(msg);
+    } catch (e) {
+      console.warn("Confirm blocked by sandbox, defaulting to true:", msg, e);
+      return true;
+    }
+  };
+
   // Open form for creating
   const handleOpenCreate = () => {
     setEditingClient(null);

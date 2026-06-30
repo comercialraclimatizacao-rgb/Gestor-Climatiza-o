@@ -49,6 +49,23 @@ export default function Agenda({
   const [tipoServico, setTipoServico] = useState<Agendamento['tipo_servico']>('manutencao_preventiva');
   const [observacoes, setObservacoes] = useState('');
 
+  const alert = (msg: string) => {
+    try {
+      window.alert(msg);
+    } catch (e) {
+      console.warn("Alert blocked by sandbox, logged message:", msg, e);
+    }
+  };
+
+  const confirm = (msg: string): boolean => {
+    try {
+      return window.confirm(msg);
+    } catch (e) {
+      console.warn("Confirm blocked by sandbox, defaulting to true:", msg, e);
+      return true;
+    }
+  };
+
   // Check if presets are passed from Equipamentos page
   useEffect(() => {
     const presetClient = localStorage.getItem('climatech_agenda_preset_client');

@@ -168,3 +168,37 @@ export interface EmpresaConfig {
   texto_padrao_os?: string;
   logo_url?: string;
 }
+
+export interface ItemOrcamento {
+  id: string;
+  descricao: string;
+  quantidade: number;
+  valor_unitario: number;
+}
+
+export interface SavedOrcamento {
+  id: string;
+  numero: string;
+  clienteId: string;
+  clienteNome: string;
+  clienteTel: string;
+  clienteEnd: string;
+  equipamentoId: string;
+  equipMarca: string;
+  equipModelo: string;
+  equipCapacidade: string;
+  dataEmissao: string;
+  validadeDias: number;
+  formaPagamento: string;
+  prazoExecucao: string;
+  garantiaMeses: number;
+  observacoes: string;
+  items: ItemOrcamento[];
+  descontoPercent: number;
+  subtotal: number;
+  valorDesconto: number;
+  valorTotal: number;
+  activeLayout: 'timbrado' | 'moderno' | 'tecnico' | 'minimalista';
+  status: 'pendente' | 'aprovado' | 'rejeitado';
+}
+

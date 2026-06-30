@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { 
   Users, Calendar, FileText, AlertTriangle, 
   DollarSign, ArrowRight, CheckCircle2, Play, Plus, Trash2, ShieldAlert,
-  CreditCard, Receipt, Sparkles, Check, FileDown, TrendingUp, AlertCircle, RefreshCw, Printer, Search
+  CreditCard, Receipt, Sparkles, Check, FileDown, TrendingUp, AlertCircle, RefreshCw, Printer, Search, Upload,
+  Pencil, X
 } from 'lucide-react';
 import { Cliente, Equipamento, Agendamento, OrdemServico, Peca } from '../types';
 
@@ -32,6 +33,7 @@ interface GastoCartao {
   valor: number;
   data: string;
   categoria: string;
+  pago?: boolean;
 }
 
 const defaultCartoes: Cartao[] = [
@@ -43,8 +45,8 @@ const defaultCartoes: Cartao[] = [
 ];
 
 const defaultGastos: GastoCartao[] = [
-  { id: 'g_1', cartao_id: 'bmg', descricao: 'LUISGUSTAVOPERES - Parcela Compressor', valor: 950.00, data: '2026-06-15', categoria: 'Peças' },
-  { id: 'g_2', cartao_id: 'bmg', descricao: 'CLIMARIO SA - Tubo Cobre e Insumos', valor: 780.50, data: '2026-06-18', categoria: 'Peças' }
+  { id: 'g_1', cartao_id: 'bmg', descricao: 'LUISGUSTAVOPERES - Parcela Compressor', valor: 950.00, data: '2026-06-15', categoria: 'Peças', pago: false },
+  { id: 'g_2', cartao_id: 'bmg', descricao: 'CLIMARIO SA - Tubo Cobre e Insumos', valor: 780.50, data: '2026-06-18', categoria: 'Peças', pago: false }
 ];
 
 export default function Dashboard({
@@ -58,6 +60,23 @@ export default function Dashboard({
   addOrdemServico
 }: DashboardProps) {
   
+  const alert = (msg: string) => {
+    try {
+      window.alert(msg);
+    } catch (e) {
+      console.warn("Alert blocked by sandbox, logged message:", msg, e);
+    }
+  };
+
+  const confirm = (msg: string): boolean => {
+    try {
+      return window.confirm(msg);
+    } catch (e) {
+      console.warn("Confirm blocked by sandbox, defaulting to true:", msg, e);
+      return true;
+    }
+  };
+
   const todayStr = new Date().toISOString().split('T')[0];
 
   // 1. Core Calculations
@@ -147,6 +166,14 @@ export default function Dashboard({
     return localStorage.getItem('climatech_audit_result_v4') || '';
   });
   const [isAuditing, setIsAuditing] = useState(false);
+
+  // Editing state for registered card expenses (gastos)
+  const [editingGastoId, setEditingGastoId] = useState<string | null>(null);
+  const [editGastoDesc, setEditGastoDesc] = useState('');
+  const [editGastoVal, setEditGastoVal] = useState('');
+  const [editGastoCartaoId, setEditGastoCartaoId] = useState('');
+  const [editGastoCat, setEditGastoCat] = useState('');
+  const [editGastoDate, setEditGastoDate] = useState('');
 
   useEffect(() => {
     if (auditResult) {
@@ -256,13 +283,93 @@ export default function Dashboard({
       descricao: gastoDesc,
       valor: valNum,
       data: gastoDate,
-      categoria: gastoCat
+      categoria: gastoCat,
+      pago: false
     };
 
     setGastos(prev => [newGasto, ...prev]);
     setGastoDesc('');
     setGastoVal('');
     alert('Gasto lançado com sucesso!');
+  };
+
+  const handleStartEditGasto = (gasto: GastoCartao) => {
+    setEditingGastoId(gasto.id);
+    setEditGastoDesc(gasto.descricao);
+    setEditGastoVal(gasto.valor.toString());
+    setEditGastoCartaoId(gasto.cartao_id);
+    setEditGastoCat(gasto.categoria);
+    setEditGastoDate(gasto.data);
+  };
+
+  const handleSaveEditGasto = (id: string) => {
+    if (!editGastoDesc || !editGastoVal) {
+      alert('Por favor, preencha a descrição e o valor do gasto.');
+      return;
+    }
+    const valNum = parseFloat(editGastoVal) || 0;
+    if (valNum <= 0) {
+      alert('O valor do gasto deve ser maior que zero.');
+      return;
+    }
+
+    setGastos(prev => prev.map(g => {
+      if (g.id === id) {
+        return {
+          ...g,
+          descricao: editGastoDesc,
+          valor: valNum,
+          cartao_id: editGastoCartaoId,
+          categoria: editGastoCat,
+          data: editGastoDate
+        };
+      }
+      return g;
+    }));
+
+    setEditingGastoId(null);
+  };
+
+  const handleCancelEditGasto = () => {
+    setEditingGastoId(null);
+  };
+
+  const handleTogglePagoGasto = (id: string) => {
+    setGastos(prev => prev.map(g => {
+      if (g.id === id) {
+        return {
+          ...g,
+          pago: !g.pago
+        };
+      }
+      return g;
+    }));
+  };
+
+  const handlePagarTudo = () => {
+    // Get visible gastos based on selectedCardId
+    const visibleGastos = gastos.filter(g => selectedCardId === 'todos' || g.cartao_id === selectedCardId);
+    if (visibleGastos.length === 0) {
+      alert('Nenhum gasto disponível para pagar.');
+      return;
+    }
+    
+    const unpagedCount = visibleGastos.filter(g => !g.pago).length;
+    if (unpagedCount === 0) {
+      alert('Todos os gastos listados já estão pagos!');
+      return;
+    }
+
+    if (confirm(`Deseja marcar todos os ${unpagedCount} gastos pendentes como PAGOS?`)) {
+      setGastos(prev => prev.map(g => {
+        const isVisible = selectedCardId === 'todos' || g.cartao_id === selectedCardId;
+        if (isVisible && !g.pago) {
+          return { ...g, pago: true };
+        }
+        return g;
+      }));
+      alert('Todos os gastos selecionados foram marcados como pagos!');
+    }
   };
 
   const handleDeleteGasto = (id: string, desc: string) => {
@@ -330,6 +437,7 @@ export default function Dashboard({
       return;
     }
 
+    const fallbackCardId = selectedCardId === 'todos' ? 'nubank' : selectedCardId;
     const lines = extratoTexto.split('\n');
     let importedCount = 0;
     const newGastos: GastoCartao[] = [];
@@ -347,17 +455,18 @@ export default function Dashboard({
       let descricao = line.trim();
       descricao = descricao.replace(/(?:R\$?\s*)?\d+(?:\.\d+)*(?:,\d{2})?/, '').replace('-', '').trim();
       if (!descricao) {
-        descricao = `Gasto Extrato ${selectedCardId.toUpperCase()} #${index + 1}`;
+        descricao = `Gasto Extrato ${fallbackCardId.toUpperCase()} #${index + 1}`;
       }
 
       if (valor > 0) {
         newGastos.push({
           id: `g_imported_${Date.now()}_${index}`,
-          cartao_id: selectedCardId,
+          cartao_id: fallbackCardId,
           descricao,
           valor,
           data: todayStr,
-          categoria: 'Peças'
+          categoria: 'Peças',
+          pago: false
         });
         importedCount++;
       }
@@ -366,7 +475,7 @@ export default function Dashboard({
     if (newGastos.length > 0) {
       setGastos(prev => [...newGastos, ...prev]);
       setExtratoTexto('');
-      alert(`${importedCount} transações importadas para o cartão ${selectedCardId.toUpperCase()} com sucesso!`);
+      alert(`${importedCount} transações importadas para o cartão ${fallbackCardId.toUpperCase()} com sucesso!`);
     } else {
       alert('Não foi possível extrair valores. Escreva no formato: "Descrição - R$ 150,00"');
     }
@@ -401,22 +510,36 @@ export default function Dashboard({
   };
 
   const handleFileSelected = (file: File) => {
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const text = event.target?.result as string;
-      if (text && text.length > 30) {
-        processExtratoText(text, file.name);
-      } else {
-        generateHighFidelitySimulatedStatement(file.name);
-      }
-    };
-    
-    reader.readAsText(file);
-  };
-
-  const processExtratoText = async (text: string, fileName?: string) => {
     setFileImporting(true);
     setImportLog([]);
+
+    const base64Reader = new FileReader();
+    base64Reader.onload = (e) => {
+      const dataUrl = e.target?.result as string;
+      const base64Data = dataUrl ? (dataUrl.split(',')[1] || '') : '';
+      
+      const textReader = new FileReader();
+      textReader.onload = (txE) => {
+        const textData = txE.target?.result as string || '';
+        processExtrato(textData, base64Data, file.type, file.name);
+      };
+      textReader.onerror = () => {
+        processExtrato('', base64Data, file.type, file.name);
+      };
+      textReader.readAsText(file);
+    };
+    base64Reader.onerror = () => {
+      setFileImporting(false);
+      alert('Erro ao ler o arquivo selecionado.');
+    };
+    base64Reader.readAsDataURL(file);
+  };
+
+  const processExtrato = async (text: string, base64Data: string, fileMimeType: string, fileName?: string) => {
+    setFileImporting(true);
+    setImportLog([]);
+    
+    const fallbackCardId = selectedCardId === 'todos' ? 'nubank' : selectedCardId;
     
     try {
       const response = await fetch('/api/gemini/parse-extrato', {
@@ -425,7 +548,9 @@ export default function Dashboard({
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          text: text.substring(0, 15000), // Protect token limits
+          text: text ? text.substring(0, 15000) : '', // Protect token limits
+          fileBase64: base64Data,
+          fileMimeType: fileMimeType || 'application/octet-stream',
           fileName
         })
       });
@@ -434,16 +559,17 @@ export default function Dashboard({
       if (data.success && data.transactions && data.transactions.length > 0) {
         const newGastos: GastoCartao[] = data.transactions.map((t: any, index: number) => ({
           id: `g_pdf_${Date.now()}_${index}`,
-          cartao_id: t.cartao_id || selectedCardId,
+          cartao_id: t.cartao_id && t.cartao_id !== 'todos' ? t.cartao_id : fallbackCardId,
           descricao: t.descricao,
           valor: t.valor,
           data: t.data || todayStr,
-          categoria: t.categoria || 'Peças'
+          categoria: t.categoria || 'Peças',
+          pago: false
         }));
         
         setGastos(prev => [...newGastos, ...prev]);
         setImportLog(data.transactions.map((t: any) => ({
-          card_id: t.cartao_id || selectedCardId,
+          card_id: t.cartao_id && t.cartao_id !== 'todos' ? t.cartao_id : fallbackCardId,
           descricao: t.descricao,
           valor: t.valor,
           data: t.data || todayStr,
@@ -466,7 +592,7 @@ export default function Dashboard({
     let imported: typeof importLog = [];
     const newGastos: GastoCartao[] = [];
     
-    let defaultCard = selectedCardId;
+    let defaultCard = selectedCardId === 'todos' ? 'nubank' : selectedCardId;
     const nameLower = (fileName || '').toLowerCase();
     if (nameLower.includes('nubank')) defaultCard = 'nubank';
     else if (nameLower.includes('inter')) defaultCard = 'inter';
@@ -529,7 +655,8 @@ export default function Dashboard({
           descricao,
           valor,
           data,
-          categoria
+          categoria,
+          pago: false
         });
         imported.push({
           card_id: cardId,
@@ -1188,63 +1315,178 @@ export default function Dashboard({
           <div className="space-y-4">
             
             {/* AUDITORIA DE EXTRATOS - IMPORTADOR */}
-            <div className="bg-white p-5 rounded-xl border border-slate-200 space-y-3">
-              <div className="flex justify-between items-center">
+            <div className="bg-white p-5 rounded-xl border border-slate-200 space-y-4">
+              <div className="flex justify-between items-center pb-2 border-b border-slate-100">
                 <div className="space-y-0.5">
                   <h3 className="text-xs font-extrabold text-slate-800 uppercase tracking-wider">
-                    AUDITORIA DE EXTRATOS — {selectedCardObj.nome.toUpperCase()}
+                    Conciliação e Importação de Extratos
                   </h3>
-                  <p className="text-[11px] text-slate-400">Importador rápido de faturas de cartões em lote.</p>
+                  <p className="text-[11px] text-slate-400">Automatize o fluxo de caixa importando arquivos de faturas.</p>
                 </div>
-                <span className="text-[10px] text-slate-400 font-bold">Lote Rápido</span>
+                <span className="text-[10px] bg-blue-100 text-blue-800 font-bold px-2 py-0.5 rounded-full font-mono uppercase">IA Ativa</span>
               </div>
 
-              {/* Bank templates shortcuts */}
-              <div className="flex flex-wrap gap-1.5 pt-1">
-                {cartoes.map(c => (
-                  <button
-                    key={`template_${c.id}`}
-                    onClick={() => applyTemplate(c.id)}
-                    className={`px-2 py-1 text-[10px] font-bold rounded transition border ${activeTemplate === c.id ? 'bg-slate-900 border-slate-900 text-white' : 'bg-slate-50 hover:bg-slate-100 border-slate-200 text-slate-700'} cursor-pointer`}
-                  >
-                    Modelo {c.nome}
-                  </button>
-                ))}
+              {/* TABS SELECTOR */}
+              <div className="grid grid-cols-2 gap-1 bg-slate-100 p-1 rounded-lg">
+                <button
+                  type="button"
+                  onClick={() => setImportTab('pdf')}
+                  className={`py-1.5 text-xs font-bold rounded-md transition text-center cursor-pointer ${importTab === 'pdf' ? 'bg-white text-blue-900 shadow-xs' : 'text-slate-500 hover:text-slate-900'}`}
+                >
+                  📂 PDF / Arquivo
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setImportTab('manual')}
+                  className={`py-1.5 text-xs font-bold rounded-md transition text-center cursor-pointer ${importTab === 'manual' ? 'bg-white text-blue-900 shadow-xs' : 'text-slate-500 hover:text-slate-900'}`}
+                >
+                  📝 Colar Texto Manual
+                </button>
               </div>
 
-              <div className="space-y-2">
-                <textarea 
-                  rows={4}
-                  value={extratoTexto}
-                  onChange={e => setExtratoTexto(e.target.value)}
-                  placeholder="Cole aqui o extrato ou faturas lançadas copiadas do aplicativo... Exemplo:&#10;15/06 Compressor Jogo - R$ 950,00&#10;18/06 Insumos Tubulações - R$ 780,50"
-                  className="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg text-xs font-mono focus:outline-none focus:ring-1 focus:ring-indigo-500 placeholder:text-slate-400 resize-none"
-                ></textarea>
-
-                <div className="grid grid-cols-2 gap-2">
-                  <button 
-                    onClick={handleImportExtratoText}
-                    className="py-2 bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-700 text-xs font-bold rounded-lg transition text-center cursor-pointer"
+              {/* TAB CONTENT: FILE IMPORTER (PDF/TXT) */}
+              {importTab === 'pdf' && (
+                <div className="space-y-3 animate-fade-in">
+                  <div
+                    onDragEnter={handleDrag}
+                    onDragOver={handleDrag}
+                    onDragLeave={handleDrag}
+                    onDrop={handleDrop}
+                    className={`relative border-2 border-dashed rounded-xl p-6 transition flex flex-col items-center justify-center text-center group cursor-pointer ${
+                      dragActive 
+                        ? 'border-indigo-500 bg-indigo-50/50 text-indigo-800' 
+                        : 'border-slate-300 bg-slate-50 hover:bg-slate-100/70 text-slate-600'
+                    }`}
                   >
-                    Importar no {selectedCardObj.nome.toUpperCase()}
-                  </button>
+                    <input
+                      type="file"
+                      accept=".pdf,.txt,.csv,.json"
+                      onChange={handleFileChange}
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                    />
+                    
+                    {fileImporting ? (
+                      <div className="space-y-2 py-3 flex flex-col items-center">
+                        <RefreshCw className="w-8 h-8 text-indigo-600 animate-spin" />
+                        <p className="text-xs font-bold text-indigo-900">Analisando Extrato via IA Gemini...</p>
+                        <p className="text-[10px] text-slate-400">Lendo transações e identificando cartões...</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-2 py-2 flex flex-col items-center">
+                        <Upload className="w-8 h-8 text-slate-400 group-hover:text-indigo-600 group-hover:scale-105 transition" />
+                        <div>
+                          <p className="text-xs font-bold text-slate-800">Arraste seu extrato em PDF ou clique aqui</p>
+                          <p className="text-[10px] text-slate-400 mt-1 max-w-[280px] mx-auto leading-relaxed">
+                            Aceita extratos em PDF, faturas exportadas ou TXT de qualquer banco (Nubank, Inter, Carrefour, C6, BMG).
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* IMPORT LOGS FEEDBACK */}
+                  {importLog.length > 0 && (
+                    <div className="bg-slate-50 border border-slate-200 rounded-lg p-3 space-y-2">
+                      <div className="flex justify-between items-center pb-1.5 border-b border-slate-200">
+                        <span className="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">Últimos Lançamentos Importados ({importLog.length})</span>
+                        <span className="text-[10px] text-emerald-600 font-bold">● Processado</span>
+                      </div>
+                      <div className="space-y-1.5 max-h-[140px] overflow-y-auto pr-1">
+                        {importLog.map((log, index) => {
+                          const targetCard = cartoes.find(c => c.id === log.card_id) || selectedCardObj;
+                          return (
+                            <div key={index} className="flex items-center justify-between p-1.5 bg-white rounded border border-slate-100 text-[10.5px]">
+                              <div className="space-y-0.5 truncate max-w-[65%]">
+                                <p className="font-semibold text-slate-700 truncate" title={log.descricao}>{log.descricao}</p>
+                                <div className="flex items-center gap-1.5 text-[9.5px]">
+                                  <span className="font-mono text-slate-400">{log.data.split('-').reverse().join('/')}</span>
+                                  <span className="font-bold text-slate-500 uppercase font-mono px-1 bg-slate-100 rounded text-[8px]">{log.categoria}</span>
+                                </div>
+                              </div>
+                              <div className="text-right shrink-0">
+                                <p className="font-bold text-slate-800">R$ {log.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+                                <p className={`text-[8.5px] font-extrabold uppercase font-mono ${targetCard.id === 'c6' ? 'text-indigo-600' : 'text-slate-400'}`}>{targetCard.nome}</p>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* TRIGGER AUDIT DIRECTLY */}
                   <button 
                     onClick={handleIAAudit}
                     disabled={isAuditing}
-                    className="py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white text-xs font-bold rounded-lg transition flex items-center justify-center gap-1 shadow-xs cursor-pointer"
+                    className="w-full py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white text-xs font-bold rounded-lg transition flex items-center justify-center gap-1.5 shadow-xs cursor-pointer"
                   >
                     {isAuditing ? (
                       <>
-                        <RefreshCw className="w-3.5 h-3.5 animate-spin" /> Auditando...
+                        <RefreshCw className="w-3.5 h-3.5 animate-spin" /> Auditando Caixa Geral...
                       </>
                     ) : (
                       <>
-                        <Sparkles className="w-3.5 h-3.5 fill-white" /> Auditoria IA Gemini
+                        <Sparkles className="w-3.5 h-3.5 fill-white" /> Executar Auditoria IA no Caixa
                       </>
                     )}
                   </button>
                 </div>
-              </div>
+              )}
+
+              {/* TAB CONTENT: MANUAL TEXT COPY-PASTE */}
+              {importTab === 'manual' && (
+                <div className="space-y-3 animate-fade-in">
+                  {/* Bank templates shortcuts */}
+                  <div className="space-y-1">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Modelos de Simulação Rápida</span>
+                    <div className="flex flex-wrap gap-1">
+                      {cartoes.map(c => (
+                        <button
+                          key={`template_${c.id}`}
+                          onClick={() => applyTemplate(c.id)}
+                          className={`px-2 py-1 text-[9px] font-bold rounded transition border ${activeTemplate === c.id ? 'bg-slate-900 border-slate-900 text-white' : 'bg-slate-50 hover:bg-slate-100 border-slate-200 text-slate-700'} cursor-pointer`}
+                        >
+                          {c.nome}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <textarea 
+                      rows={4}
+                      value={extratoTexto}
+                      onChange={e => setExtratoTexto(e.target.value)}
+                      placeholder="Cole aqui o extrato ou faturas lançadas copiadas do aplicativo... Exemplo:&#10;15/06 Compressor Jogo - R$ 950,00&#10;18/06 Insumos Tubulações - R$ 780,50"
+                      className="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg text-xs font-mono focus:outline-none focus:ring-1 focus:ring-indigo-500 placeholder:text-slate-400 resize-none"
+                    ></textarea>
+
+                    <div className="grid grid-cols-2 gap-2">
+                      <button 
+                        onClick={handleImportExtratoText}
+                        className="py-2 bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-700 text-xs font-bold rounded-lg transition text-center cursor-pointer"
+                      >
+                        Importar no {selectedCardObj.nome.toUpperCase()}
+                      </button>
+                      <button 
+                        onClick={handleIAAudit}
+                        disabled={isAuditing}
+                        className="py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white text-xs font-bold rounded-lg transition flex items-center justify-center gap-1 shadow-xs cursor-pointer"
+                      >
+                        {isAuditing ? (
+                          <>
+                            <RefreshCw className="w-3.5 h-3.5 animate-spin" /> Processando...
+                          </>
+                        ) : (
+                          <>
+                            <Sparkles className="w-3.5 h-3.5 fill-white" /> Auditoria IA
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* AUDITORIA DE IA GEMINI output panel */}
@@ -1301,18 +1543,30 @@ export default function Dashboard({
               <p className="text-[10px] text-slate-400 mt-0.5">Histórico unificado de lançamentos e notas de conformidade fiscal.</p>
             </div>
             
-            <div className="flex items-center gap-2 print:hidden">
-              <span className="text-[11px] font-bold text-slate-500">Filtrar por Cartão:</span>
-              <select 
-                value={selectedCardId}
-                onChange={e => setSelectedCardId(e.target.value)}
-                className="px-2.5 py-1 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-700 focus:outline-none"
+            <div className="flex items-center gap-3 print:hidden self-end sm:self-auto">
+              <button 
+                onClick={handlePagarTudo}
+                className="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg transition flex items-center gap-1.5 shadow-sm cursor-pointer"
+                title="Pagar todos os itens visíveis no filtro atual"
               >
-                <option value="todos">Mostrar Todos</option>
-                {cartoes.map(c => (
-                  <option key={c.id} value={c.id}>{c.nome}</option>
-                ))}
-              </select>
+                <CheckCircle2 className="w-3.5 h-3.5" /> Pagar Tudo
+              </button>
+
+              <div className="h-5 w-px bg-slate-200"></div>
+
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] font-bold text-slate-500">Filtrar por Cartão:</span>
+                <select 
+                  value={selectedCardId}
+                  onChange={e => setSelectedCardId(e.target.value)}
+                  className="px-2.5 py-1 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-700 focus:outline-none focus:ring-1 focus:ring-indigo-500 cursor-pointer"
+                >
+                  <option value="todos">Mostrar Todos</option>
+                  {cartoes.map(c => (
+                    <option key={c.id} value={c.id}>{c.nome}</option>
+                  ))}
+                </select>
+              </div>
             </div>
           </div>
 
@@ -1324,6 +1578,7 @@ export default function Dashboard({
                   <th className="py-3 px-4">Cartão</th>
                   <th className="py-3 px-4">Descrição da Despesa</th>
                   <th className="py-3 px-4">Categoria</th>
+                  <th className="py-3 px-4">Status</th>
                   <th className="py-3 px-4 text-right">Valor</th>
                   <th className="py-3 px-4 text-center print:hidden">Ações</th>
                 </tr>
@@ -1333,31 +1588,141 @@ export default function Dashboard({
                   .filter(g => selectedCardId === 'todos' || g.cartao_id === selectedCardId)
                   .map(gasto => {
                     const card = cartoes.find(c => c.id === gasto.cartao_id);
+                    const isEditing = editingGastoId === gasto.id;
+
+                    if (isEditing) {
+                      return (
+                        <tr key={gasto.id} className="bg-indigo-50/40 border-y border-indigo-100">
+                          {/* EDITING ROW */}
+                          <td className="py-2.5 px-4">
+                            <input 
+                              type="date" 
+                              value={editGastoDate} 
+                              onChange={e => setEditGastoDate(e.target.value)}
+                              className="p-1 border border-slate-300 rounded text-xs w-full bg-white text-slate-800 font-mono focus:outline-none focus:ring-1 focus:ring-indigo-500" 
+                            />
+                          </td>
+                          <td className="py-2.5 px-4">
+                            <select 
+                              value={editGastoCartaoId} 
+                              onChange={e => setEditGastoCartaoId(e.target.value)}
+                              className="p-1 border border-slate-300 rounded text-xs w-full bg-white text-slate-800 font-bold focus:outline-none focus:ring-1 focus:ring-indigo-500 cursor-pointer"
+                            >
+                              {cartoes.map(c => (
+                                <option key={c.id} value={c.id}>{c.nome}</option>
+                              ))}
+                            </select>
+                          </td>
+                          <td className="py-2.5 px-4">
+                            <input 
+                              type="text" 
+                              value={editGastoDesc} 
+                              onChange={e => setEditGastoDesc(e.target.value)}
+                              className="p-1 border border-slate-300 rounded text-xs w-full bg-white text-slate-800 font-semibold focus:outline-none focus:ring-1 focus:ring-indigo-500" 
+                            />
+                          </td>
+                          <td className="py-2.5 px-4">
+                            <select 
+                              value={editGastoCat} 
+                              onChange={e => setEditGastoCat(e.target.value)}
+                              className="p-1 border border-slate-300 rounded text-xs w-full bg-white text-slate-800 focus:outline-none focus:ring-1 focus:ring-indigo-500 cursor-pointer"
+                            >
+                              <option value="Peças">Peças</option>
+                              <option value="Ferramentas">Ferramentas</option>
+                              <option value="Combustível">Combustível</option>
+                              <option value="Alimentação">Alimentação</option>
+                              <option value="Serviços">Serviços</option>
+                              <option value="Outros">Outros</option>
+                            </select>
+                          </td>
+                          <td className="py-2.5 px-4 text-slate-400 font-medium italic text-[10px]">
+                            {gasto.pago ? 'Pago ✅' : 'Pendente ⏳'}
+                          </td>
+                          <td className="py-2.5 px-4 text-right">
+                            <div className="flex items-center gap-1 justify-end">
+                              <span className="text-slate-400 font-bold">R$</span>
+                              <input 
+                                type="number" 
+                                step="0.01"
+                                value={editGastoVal} 
+                                onChange={e => setEditGastoVal(e.target.value)}
+                                className="p-1 border border-slate-300 rounded text-xs w-24 text-right bg-white text-slate-800 font-mono font-bold focus:outline-none focus:ring-1 focus:ring-indigo-500" 
+                              />
+                            </div>
+                          </td>
+                          <td className="py-2.5 px-4 text-center print:hidden">
+                            <div className="flex items-center justify-center gap-2">
+                              <button 
+                                onClick={() => handleSaveEditGasto(gasto.id)}
+                                className="p-1 bg-emerald-100 text-emerald-800 hover:bg-emerald-200 rounded-md transition cursor-pointer"
+                                title="Salvar Alterações"
+                              >
+                                <Check className="w-3.5 h-3.5" />
+                              </button>
+                              <button 
+                                onClick={handleCancelEditGasto}
+                                className="p-1 bg-slate-100 text-slate-600 hover:bg-slate-200 rounded-md transition cursor-pointer"
+                                title="Cancelar Edição"
+                              >
+                                <X className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    }
+
                     return (
                       <tr key={gasto.id} className="hover:bg-slate-50/50 transition">
                         <td className="py-3 px-4 font-mono text-slate-500">{gasto.data.split('-').reverse().join('/')}</td>
                         <td className="py-3 px-4">
-                          <span className="px-1.5 py-0.5 bg-slate-100 text-slate-800 text-[9px] font-extrabold rounded uppercase tracking-wider">
+                          <span className="px-1.5 py-0.5 bg-slate-100 text-slate-800 text-[9px] font-extrabold rounded uppercase tracking-wider border border-slate-200">
                             {card?.nome || gasto.cartao_id.toUpperCase()}
                           </span>
                         </td>
                         <td className="py-3 px-4 font-medium text-slate-700">{gasto.descricao}</td>
                         <td className="py-3 px-4">
-                          <span className="px-2 py-0.5 bg-blue-50 text-blue-700 text-[10px] font-semibold rounded-full">
+                          <span className="px-2 py-0.5 bg-blue-50 text-blue-700 text-[10px] font-semibold rounded-full border border-blue-100/60">
                             {gasto.categoria}
                           </span>
+                        </td>
+                        <td className="py-3 px-4">
+                          <button 
+                            onClick={() => handleTogglePagoGasto(gasto.id)}
+                            className={`px-2 py-0.5 text-[10px] font-bold rounded-full transition-all flex items-center gap-1 border cursor-pointer select-none ${gasto.pago ? 'bg-emerald-50 text-emerald-800 border-emerald-200 hover:bg-emerald-100' : 'bg-amber-50 text-amber-700 border-amber-100 hover:bg-amber-100'}`}
+                            title={gasto.pago ? "Marcar como Pendente (Não Pago)" : "Marcar como Pago"}
+                          >
+                            {gasto.pago ? (
+                              <>
+                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Pago ✅
+                              </>
+                            ) : (
+                              <>
+                                <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span> Pendente ⏳
+                              </>
+                            )}
+                          </button>
                         </td>
                         <td className="py-3 px-4 text-right font-mono font-bold text-slate-800">
                           R$ {gasto.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                         </td>
                         <td className="py-3 px-4 text-center print:hidden">
-                          <button 
-                            onClick={() => handleDeleteGasto(gasto.id, gasto.descricao)}
-                            className="p-1 text-slate-400 hover:text-red-500 transition cursor-pointer"
-                            title="Remover Despesa"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
+                          <div className="flex items-center justify-center gap-1.5">
+                            <button 
+                              onClick={() => handleStartEditGasto(gasto)}
+                              className="p-1 text-slate-400 hover:text-indigo-600 transition cursor-pointer"
+                              title="Editar Gasto"
+                            >
+                              <Pencil className="w-3.5 h-3.5" />
+                            </button>
+                            <button 
+                              onClick={() => handleDeleteGasto(gasto.id, gasto.descricao)}
+                              className="p-1 text-slate-400 hover:text-red-500 transition cursor-pointer"
+                              title="Remover Despesa"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     );
@@ -1366,7 +1731,7 @@ export default function Dashboard({
                 {/* Empty State Table */}
                 {gastos.filter(g => selectedCardId === 'todos' || g.cartao_id === selectedCardId).length === 0 && (
                   <tr>
-                    <td colSpan={6} className="py-12 text-center text-slate-400">
+                    <td colSpan={7} className="py-12 text-center text-slate-400">
                       <Receipt className="w-8 h-8 text-slate-300 mx-auto mb-2" />
                       <p className="font-semibold">Nenhum gasto lançado para o filtro selecionado.</p>
                       <p className="text-[11px] text-slate-400">Utilize o formulário acima para registrar gastos.</p>

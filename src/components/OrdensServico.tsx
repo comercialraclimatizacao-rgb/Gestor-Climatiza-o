@@ -68,6 +68,23 @@ export default function OrdensServico({
   const [selectedPartId, setSelectedPartId] = useState('');
   const [partQty, setPartQty] = useState(1);
 
+  const alert = (msg: string) => {
+    try {
+      window.alert(msg);
+    } catch (e) {
+      console.warn("Alert blocked by sandbox, logged message:", msg, e);
+    }
+  };
+
+  const confirm = (msg: string): boolean => {
+    try {
+      return window.confirm(msg);
+    } catch (e) {
+      console.warn("Confirm blocked by sandbox, defaulting to true:", msg, e);
+      return true;
+    }
+  };
+
   // Select first client initially
   useEffect(() => {
     if (clientes.length > 0 && !clienteId) {
@@ -1133,7 +1150,16 @@ export default function OrdensServico({
               </div>
               <div className="flex gap-2">
                 <button
-                  onClick={() => window.print()}
+                  onClick={() => {
+                    const originalTitle = document.title;
+                    const clientName = clientes.find(c => c.id === activeOS.cliente_id)?.nome || 'Cliente';
+                    const clientClean = clientName.replace(/[^a-zA-Z0-9_\-]/g, "_").replace(/__+/g, "_");
+                    document.title = `OrdemServico_${activeOS.numero_os}_${clientClean}`.trim();
+                    window.print();
+                    setTimeout(() => {
+                      document.title = originalTitle;
+                    }, 1000);
+                  }}
                   className="px-4 py-2 bg-blue-700 hover:bg-blue-800 text-white text-xs font-bold rounded-lg transition flex items-center gap-1.5 shadow-xs"
                 >
                   <Printer className="w-4 h-4" /> Enviar para Impressora / PDF

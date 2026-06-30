@@ -1,4 +1,4 @@
-import { Cliente, Equipamento, Tecnico, Agendamento, OrdemServico, Peca, Notificacao, EmpresaConfig } from './types';
+import { Cliente, Equipamento, Tecnico, Agendamento, OrdemServico, Peca, Notificacao, EmpresaConfig, SavedOrcamento } from './types';
 
 export const initialEmpresaConfig: EmpresaConfig = {
   nome_empresa: 'R.A Climatização',
@@ -495,3 +495,64 @@ export const initialNotificacoes: Notificacao[] = [
     data_envio: '2026-06-27T16:45:00Z'
   }
 ];
+
+export const initialOrcamentos: SavedOrcamento[] = [
+  {
+    id: 'orc_1',
+    numero: 'ORC-7320',
+    clienteId: 'custom',
+    clienteNome: 'Condomínio Spazio Di Napoli',
+    clienteTel: '(11) 98765-4321',
+    clienteEnd: 'Rua Augusta, 1200 - Consolação - SP',
+    equipamentoId: 'custom',
+    equipMarca: 'Daikin',
+    equipModelo: 'Inverter Hi-Wall',
+    equipCapacidade: '18000 BTUs',
+    dataEmissao: '2026-06-25',
+    validadeDias: 15,
+    formaPagamento: 'À vista com 5% de desconto via PIX, ou em até 3x no cartão sem juros',
+    prazoExecucao: '3 a 4 dias úteis',
+    garantiaMeses: 12,
+    observacoes: 'Instalação com tubulação de cobre de alta qualidade de 1/4 e 1/2 polegadas, suporte de fixação externo reforçado e amortecedores inclusos. Não inclui furação em vigas de concreto armado.',
+    items: [
+      { id: 'item_1_1', descricao: 'Instalação técnica completa de Ar Condicionado Daikin 18.000 BTUs', quantidade: 1, valor_unitario: 850.00 },
+      { id: 'item_1_2', descricao: 'Kit infraestrutura de cobre extra (por metro excedente aos 3m inclusos)', quantidade: 2, valor_unitario: 120.00 },
+      { id: 'item_1_3', descricao: 'Suporte de fixação externo de aço carbono com pintura epóxi anti-ferrugem', quantidade: 1, valor_unitario: 110.00 }
+    ],
+    descontoPercent: 5,
+    subtotal: 1200.00,
+    valorDesconto: 60.00,
+    valorTotal: 1140.00,
+    activeLayout: 'timbrado',
+    status: 'aprovado'
+  },
+  {
+    id: 'orc_2',
+    numero: 'ORC-4451',
+    clienteId: 'custom',
+    clienteNome: 'Clínica Odontológica Sorriso',
+    clienteTel: '(11) 99999-7777',
+    clienteEnd: 'Av. Paulista, 1500 - Bela Vista - SP',
+    equipamentoId: 'custom',
+    equipMarca: 'Fujitsu',
+    equipModelo: 'Cassete Inverter',
+    equipCapacidade: '36000 BTUs',
+    dataEmissao: '2026-06-28',
+    validadeDias: 10,
+    formaPagamento: 'Entrada de 40% + 2 parcelas no boleto faturado para PJ',
+    prazoExecucao: '1 dia (execução em final de semana / fora de horário comercial)',
+    garantiaMeses: 24,
+    observacoes: 'Higienização profunda periódica preventiva recomendada para ambientes de saúde, incluindo remoção de carenagem, aplicação de bactericida biodegradável registrado na ANVISA e limpeza de bandeja de condensado.',
+    items: [
+      { id: 'item_2_1', descricao: 'Higienização e sanitização química profunda de Ar Condicionado Cassete 36k BTUs', quantidade: 2, valor_unitario: 350.00 },
+      { id: 'item_2_2', descricao: 'Substituição de capacitor de partida da condensadora externa', quantidade: 1, valor_unitario: 180.00 }
+    ],
+    descontoPercent: 0,
+    subtotal: 880.00,
+    valorDesconto: 0,
+    valorTotal: 880.00,
+    activeLayout: 'tecnico',
+    status: 'pendente'
+  }
+];
+

@@ -29,6 +29,8 @@ export default function App() {
     ordensServico,
     notificacoes,
     empresaConfig,
+    savedOrcamentos,
+    isLoading,
     activeTab,
     selectedOSId,
     setActiveTab,
@@ -56,6 +58,7 @@ export default function App() {
     clearNotification,
     clearAllNotifications,
     setEmpresaConfig,
+    saveOrcamentos,
     resetData
   } = useAppState();
 
@@ -63,6 +66,17 @@ export default function App() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   // Notification center popup toggle
   const [notifDropdownOpen, setNotifDropdownOpen] = useState(false);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-slate-900 text-white font-sans">
+        <div className="flex flex-col items-center space-y-4">
+          <div className="w-12 h-12 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-sm font-medium tracking-wide text-slate-300">Conectando ao Cloud Firestore...</p>
+        </div>
+      </div>
+    );
+  }
 
   // Unread notification count
   const unreadNotifs = notificacoes.filter(n => !n.lida);
@@ -135,7 +149,7 @@ export default function App() {
     <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row antialiased font-sans" id="app-root">
       
       {/* SIDEBAR (Desktop) */}
-      <aside className="hidden md:flex md:w-64 bg-slate-900 text-white flex-col justify-between shrink-0 shadow-lg select-none">
+      <aside className="hidden md:flex md:w-64 bg-slate-900 text-white flex-col justify-between shrink-0 shadow-lg select-none print:hidden">
         <div>
           {/* Logo Brand Header */}
           <div className="p-6 border-b border-slate-800 flex items-center gap-3">
@@ -181,7 +195,7 @@ export default function App() {
       </aside>
 
       {/* MOBILE HEADER BAR */}
-      <header className="md:hidden bg-slate-900 text-white px-4 py-3 flex items-center justify-between shadow-md shrink-0">
+      <header className="md:hidden bg-slate-900 text-white px-4 py-3 flex items-center justify-between shadow-md shrink-0 print:hidden">
         <div className="flex items-center gap-2">
           <button 
             onClick={() => setMobileMenuOpen(true)}
@@ -260,7 +274,7 @@ export default function App() {
       <main className="flex-1 flex flex-col overflow-y-auto">
         
         {/* DESKTOP HEADER BAR */}
-        <header className="hidden md:flex bg-white h-16 border-b border-slate-100 items-center justify-between px-8 shrink-0">
+        <header className="hidden md:flex bg-white h-16 border-b border-slate-100 items-center justify-between px-8 shrink-0 print:hidden">
           <div>
             <span className="text-slate-400 text-xs font-medium uppercase font-mono">
               Dashboard de Controle • {new Date().toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
@@ -455,6 +469,8 @@ export default function App() {
                   equipamentos={equipamentos}
                   ordensServico={ordensServico}
                   empresaConfig={empresaConfig}
+                  savedOrcamentos={savedOrcamentos}
+                  onSaveOrcamentos={saveOrcamentos}
                 />
               )}
 

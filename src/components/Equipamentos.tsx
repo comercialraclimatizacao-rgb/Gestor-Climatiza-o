@@ -93,6 +93,23 @@ export default function Equipamentos({
   const [selectedClientForReminder, setSelectedClientForReminder] = useState<Cliente | null>(null);
   const [aiReminderModels, setAiReminderModels] = useState<Array<{ id: string, titulo: string, mensagem: string }>>([]);
   const [loadingReminder, setLoadingReminder] = useState(false);
+
+  const alert = (msg: string) => {
+    try {
+      window.alert(msg);
+    } catch (e) {
+      console.warn("Alert blocked by sandbox, logged message:", msg, e);
+    }
+  };
+
+  const confirm = (msg: string): boolean => {
+    try {
+      return window.confirm(msg);
+    } catch (e) {
+      console.warn("Confirm blocked by sandbox, defaulting to true:", msg, e);
+      return true;
+    }
+  };
   const [activeModelTab, setActiveModelTab] = useState<string>('saude');
   const [editableMessages, setEditableMessages] = useState<Record<string, string>>({});
   const [copiedId, setCopiedId] = useState<string | null>(null);

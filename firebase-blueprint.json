@@ -1,0 +1,206 @@
+{
+  "entities": {
+    "Cliente": {
+      "title": "Cliente",
+      "description": "Customer entity",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "nome": { "type": "string" },
+        "tipo": { "type": "string" },
+        "documento": { "type": "string" },
+        "email": { "type": "string" },
+        "telefone": { "type": "string" },
+        "endereco": { "type": "string" },
+        "criado_em": { "type": "string" }
+      },
+      "required": ["id", "nome", "email", "telefone"]
+    },
+    "Equipamento": {
+      "title": "Equipamento",
+      "description": "Equipment entity",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "cliente_id": { "type": "string" },
+        "tipo_equipamento": { "type": "string" },
+        "marca": { "type": "string" },
+        "modelo": { "type": "string" },
+        "capacidade": { "type": "string" },
+        "numero_serie": { "type": "string" },
+        "local_installed": { "type": "string" },
+        "data_ultima_manutencao": { "type": "string" },
+        "data_proxima_manutencao": { "type": "string" },
+        "frequencia_manutencao": { "type": "string" }
+      },
+      "required": ["id", "cliente_id", "tipo_equipamento", "marca"]
+    },
+    "Tecnico": {
+      "title": "Tecnico",
+      "description": "Technician entity",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "nome": { "type": "string" },
+        "especialidade": { "type": "string" },
+        "telefone": { "type": "string" },
+        "email": { "type": "string" },
+        "status": { "type": "string" }
+      },
+      "required": ["id", "nome", "especialidade", "telefone"]
+    },
+    "Peca": {
+      "title": "Peca",
+      "description": "Spare part inventory entity",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "nome": { "type": "string" },
+        "codigo": { "type": "string" },
+        "quantidade_estoque": { "type": "integer" },
+        "estoque_minimo": { "type": "integer" },
+        "preco_unitario": { "type": "number" },
+        "categoria": { "type": "string" }
+      },
+      "required": ["id", "nome", "quantidade_estoque", "preco_unitario"]
+    },
+    "Agendamento": {
+      "title": "Agendamento",
+      "description": "Calendar scheduling entity",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "cliente_id": { "type": "string" },
+        "equipamento_id": { "type": "string" },
+        "tecnico_id": { "type": "string" },
+        "data_hora": { "type": "string" },
+        "descricao": { "type": "string" },
+        "tipo_servico": { "type": "string" },
+        "status": { "type": "string" }
+      },
+      "required": ["id", "cliente_id", "equipamento_id", "tecnico_id", "data_hora"]
+    },
+    "OrdemServico": {
+      "title": "OrdemServico",
+      "description": "Service order entity",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "numero_os": { "type": "integer" },
+        "cliente_id": { "type": "string" },
+        "equipamento_id": { "type": "string" },
+        "tecnico_id": { "type": "string" },
+        "data_abertura": { "type": "string" },
+        "data_finalizacao": { "type": "string" },
+        "status": { "type": "string" },
+        "descricao_reclamacao": { "type": "string" },
+        "descricao_diagnostico": { "type": "string" },
+        "descricao_servico_realizado": { "type": "string" },
+        "valor_pecas": { "type": "number" },
+        "valor_mao_de_obra": { "type": "number" },
+        "valor_total": { "type": "number" },
+        "tipo_servico": { "type": "string" },
+        "agendamento_id": { "type": "string" }
+      },
+      "required": ["id", "numero_os", "cliente_id", "equipamento_id", "tecnico_id", "data_abertura", "status"]
+    },
+    "Notificacao": {
+      "title": "Notificacao",
+      "description": "Notification alert entity",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "titulo": { "type": "string" },
+        "mensagem": { "type": "string" },
+        "tipo": { "type": "string" },
+        "lida": { "type": "boolean" },
+        "data_envio": { "type": "string" }
+      },
+      "required": ["id", "titulo", "mensagem", "lida", "data_envio"]
+    },
+    "EmpresaConfig": {
+      "title": "EmpresaConfig",
+      "description": "Company settings configuration",
+      "type": "object",
+      "properties": {
+        "nome_fantasia": { "type": "string" },
+        "razao_social": { "type": "string" },
+        "cnpj": { "type": "string" },
+        "telefone": { "type": "string" },
+        "email": { "type": "string" },
+        "endereco": { "type": "string" },
+        "website": { "type": "string" },
+        "taxa_mao_de_obra_padrao": { "type": "number" }
+      }
+    },
+    "SavedOrcamento": {
+      "title": "SavedOrcamento",
+      "description": "Saved budget proposal entity",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "numero": { "type": "string" },
+        "clienteId": { "type": "string" },
+        "clienteNome": { "type": "string" },
+        "clienteTel": { "type": "string" },
+        "clienteEnd": { "type": "string" },
+        "equipamentoId": { "type": "string" },
+        "equipMarca": { "type": "string" },
+        "equipModelo": { "type": "string" },
+        "equipCapacidade": { "type": "string" },
+        "dataEmissao": { "type": "string" },
+        "validadeDias": { "type": "integer" },
+        "formaPagamento": { "type": "string" },
+        "prazoExecucao": { "type": "string" },
+        "garantiaMeses": { "type": "integer" },
+        "observacoes": { "type": "string" },
+        "items": { "type": "array" },
+        "descontoPercent": { "type": "number" },
+        "subtotal": { "type": "number" },
+        "valorDesconto": { "type": "number" },
+        "valorTotal": { "type": "number" },
+        "activeLayout": { "type": "string" },
+        "status": { "type": "string" }
+      },
+      "required": ["id", "numero", "clienteNome", "dataEmissao", "valorTotal", "status"]
+    }
+  },
+  "firestore": {
+    "/clientes/{clienteId}": {
+      "schema": "Cliente",
+      "description": "Collection of customer documents"
+    },
+    "/equipamentos/{equipamentoId}": {
+      "schema": "Equipamento",
+      "description": "Collection of equipment documents"
+    },
+    "/tecnicos/{tecnicoId}": {
+      "schema": "Tecnico",
+      "description": "Collection of technician documents"
+    },
+    "/pecas/{pecaId}": {
+      "schema": "Peca",
+      "description": "Collection of spare part inventory documents"
+    },
+    "/agendamentos/{agendamentoId}": {
+      "schema": "Agendamento",
+      "description": "Collection of scheduling documents"
+    },
+    "/ordens_servico/{ordemServicoId}": {
+      "schema": "OrdemServico",
+      "description": "Collection of service order documents"
+    },
+    "/notificacoes/{notificacaoId}": {
+      "schema": "Notificacao",
+      "description": "Collection of alert notifications"
+    },
+    "/config/empresa": {
+      "schema": "EmpresaConfig",
+      "description": "Company profile configuration settings document"
+    },
+    "/orcamentos/{orcamentoId}": {
+      "schema": "SavedOrcamento",
+      "description": "Collection of saved budget proposals"
+    }
+  }
+}

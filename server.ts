@@ -52,13 +52,13 @@ async function startServer() {
         const couponSuffix = useCoupon ? `\n\n🎁 *BÔNUS EXCLUSIVO:* Use o cupom *${discountCoupon}* para ganhar um desconto especial na higienização do seu aparelho!` : "";
         
         const fallbacks = {
-          saude: `Olá, *${name}*! Faz tempo que seu ar-condicionado *${brand}* no(a) *${loc}* não passa por uma limpeza. Garanta um ar puro e saudável para sua família hoje mesmo. Vamos agendar a manutenção preventiva? 🍃${couponSuffix}\n\nAgende pelo link: ${schedulingLink}`,
+          saude: `❄️ *REVISÃO DE HIGIENIZAÇÃO* ❄️\n\nOlá, *${name}*! Tudo bem? 😊\n\nNotamos que já faz um tempo que o seu ar-condicionado *${brand}* no(a) *${loc}* não passa por uma higienização profissional.\n\nCuidar do seu aparelho é proteger quem você ama! Veja o que uma limpeza completa faz por você:\n\n🍃 *SAÚDE EM PRIMEIRO LUGAR:*\n✅ *Ar Puro de Verdade:* Elimina 99,9% de ácaros, fungos, vírus e poeira acumulada.\n✅ *Adeus Alergias:* Previne crises de asma, rinite, tosse e ressecamento das vias respiratórias.\n✅ *Ambiente Saudável:* Garante um ar higienizado e livre de odores desagradáveis.${couponSuffix}\n\n👉 Quer respirar um ar mais puro hoje? Garanta seu horário!\nChama no WhatsApp: ${schedulingLink}`,
           
-          energia: `Oi, *${name}*! Sabia que ar-condicionado sujo gasta até 30% mais energia? Evite surpresas na conta de luz e quebras repentinas do seu *${brand}* no(a) *${loc}*. Que tal agendar sua revisão para esta semana? ⚡${couponSuffix}\n\nAgende aqui: ${schedulingLink}`,
+          energia: `⚡ *SEU AR-CONDICIONADO PODE ESTAR PESANDO NO BOLSO!* ⚡\n\nOi, *${name}*! Sabia que a falta de higienização do seu *${brand}* no(a) *${loc}* pode estar aumentando sua conta de luz em até *30%*?\n\nQuando o filtro e a serpentina acumulam poeira, o motor precisa trabalhar o dobro para refrigerar o ambiente!\n\n💰 *SUA ECONOMIA GARANTIDA:*\n✅ *Conta de Luz Menor:* Reduz o consumo de energia elétrica em até *30%* imediatamente!\n✅ *Maior Durabilidade:* Evita quebras inesperadas e consertos caros no compressor.\n✅ *Super Resfriamento:* O aparelho volta a gelar muito mais rápido e com mais força.${couponSuffix}\n\n👉 Não gaste dinheiro à toa! Agende sua manutenção preventiva agora.\nChama no WhatsApp: ${schedulingLink}`,
           
-          direto: `Hora da revisão! *${name}*, já se passaram *${recurrenceMonths}* meses desde a sua última manutenção de ar-condicionado no seu *${brand}* no(a) *${loc}*. Proteja seu aparelho e agende seu horário pelo link: ${schedulingLink} 📅${couponSuffix}`,
+          direto: `📅 *LEMBRETE DE MANUTENÇÃO PREVENTIVA R.A CLIMATIZAÇÃO* 📅\n\nOlá, *${name}*! Passando para te lembrar que já se passaram *${recurrenceMonths} meses* desde a última higienização preventiva do seu ar-condicionado *${brand}* no(a) *${loc}*.\n\nPara manter o aparelho funcionando perfeitamente, o recomendado é a revisão a cada 6 meses.\n\n⚙️ *VANTAGENS DA HIGIENIZAÇÃO:*\n❄️ *Ar mais gelado e saudável* para sua casa.\n📉 *Queda imediata de até 30%* no consumo de energia.\n🛠️ *Evita a queima* de peças vitais do aparelho.${couponSuffix}\n\n👉 Vamos agendar a sua revisão para esta semana? É rápido e limpo!\nChama no WhatsApp: ${schedulingLink}`,
           
-          beneficios: `Olá, *${name}*! Sabia que a higienização regular do seu ar-condicionado traz benefícios claros para a sua saúde e economia? Reduz poeira, ácaros, bactérias e o consumo de energia em até 30%. Que tal agendarmos? 🌬️${couponSuffix}\n\nLink para agendamento: ${schedulingLink}`
+          beneficios: `✨ *HIGIENIZAÇÃO COMPLETA: MAIS SAÚDE & MAIS ECONOMIA!* ✨\n\nOlá, *${name}*! Que tal cuidar do seu conforto, da sua saúde e do seu bolso hoje?\n\nA higienização regular do seu ar-condicionado *${brand}* no(a) *${loc}* traz benefícios imediatos que você sente no dia a dia:\n\n📊 *VEJA OS BENEFÍCIOS:*\n🩺 *SAÚDE:* Ar 100% livre de ácaros, bactérias e impurezas causadoras de alergias.\n💵 *ECONOMIA:* Consumo de energia reduzido em até *30%* e prevenção de quebras caras.\n💨 *DESEMPENHO:* Aparelho gelando muito mais rápido e com fluxo de ar ideal.${couponSuffix}\n\n👉 Deixe seu ar-condicionado como novo! Reserve o seu horário técnico.\nChama no WhatsApp: ${schedulingLink}`
         };
         return [
           { id: "saude", titulo: "Opção 1: Foco na Saúde 🍃", mensagem: fallbacks.saude },
@@ -80,11 +80,15 @@ async function startServer() {
       try {
         // We have Gemini! Generate 4 distinct templates dynamically, instructed about scheduling link and coupon options
         const prompt = `
-        Você é um assistente de inteligência artificial especializado na área de manutenção de ar-condicionado.
+        Você é um assistente de inteligência artificial especializado na área de manutenção e higienização de ar-condicionado.
         Gere 4 modelos diferentes de mensagens personalizadas para enviar via WhatsApp para o cliente lembrando-o sobre a necessidade de fazer a manutenção preventiva/higienização de seu equipamento.
 
+        Instruções de Formatação Visual ("Desenhos" com Emojis):
+        - Cada mensagem deve possuir uma formatação extremamente atraente, com seções estruturadas usando "desenhos" visuais feitos de emojis organizados (como tópicos, cabeçalhos estilizados, caixas e setas) para facilitar a leitura.
+        - Apresente de forma explícita e visualmente marcante os BENEFÍCIOS PARA A SAÚDE (eliminação de 99% de ácaros, fungos, bactérias, prevenção de crises de alergia/rinite) e BENEFÍCIOS DE ECONOMIA DE ENERGIA (redução comprovada de até 30% na conta de luz e maior durabilidade do motor).
+
         Parâmetros de Customização Obrigatórios:
-        - Link de agendamento que DEVE ser incluído na mensagem: ${schedulingLink}
+        - Celular/Contato da Empresa (NÃO COLOQUE LINKS DE SITE OU AGENDAMENTO, APENAS O NÚMERO): ${schedulingLink}
         - Período de recorrência (meses desde a última limpeza): ${recurrenceMonths} meses
         ${useCoupon ? `- Inclua obrigatoriamente um bônus/desconto com o cupom especial "${discountCoupon}".` : "- Não ofereça cupom de desconto neste envio."}
         
@@ -92,36 +96,37 @@ async function startServer() {
         - Nome: ${clientName}
         - Aparelho: ${eqType} ${eqBrand} ${eqModel} instalado em "${eqLoc}"
 
-        As mensagens devem ser as mais simplificadas possíveis ("mais simplificada possível"), amigáveis, altamente persuasivas e utilizar formatação adequada para WhatsApp (emojis adequados e texto importante em negrito usando asteriscos, ex: *texto*).
-        As mensagens NÃO devem ser muito longas para que o cliente leia rapidamente.
+        As mensagens devem ser amigáveis, altamente persuasivas e utilizar formatação adequada para WhatsApp (emojis adequados e texto importante em negrito usando asteriscos, ex: *texto*).
+        ATENÇÃO EXTREMA: Não insira links de agendamento online ou de sites. Use estritamente o contato do WhatsApp da empresa para responder ou chamar diretamente no número: ${schedulingLink} (ex: "Chama no WhatsApp: ${schedulingLink}").
+        As mensagens devem ser curtas e diretas, mas contendo os tópicos visuais com emojis ilustrando os benefícios.
 
         Gere exatamente 4 modelos distintos seguindo estritamente estas diretrizes de conteúdo:
-        1. Opção 1: Foco na Saúde 🍃 - Chame a atenção sobre fazer tempo que o aparelho não limpa, garantindo ar puro e saudável para a família de forma direta e afetuosa.
-        2. Opção 2: Foco na Economia ⚡ - Gatilho de custos: fale sobre consumo de energia até 30% maior por conta de poeira e o perigo de quebras repentinas do aparelho.
-        3. Opção 3: Lembrete Rápido 📅 - Direto ao ponto: avise que já se passaram exatamente ${recurrenceMonths} meses desde a última manutenção e dê o link de agendamento para proteger o aparelho.
-        4. Opção 4: Benefícios Claros ✨ - Explique os benefícios da higienização regular: redução de poeiras, ácaros, bactérias e economia de energia de até 30%.
+        1. Opção 1: Foco na Saúde 🍃 - Cabeçalho estilizado com emojis. Explique visualmente que faz tempo que o aparelho não limpa, com uma seção estruturada de tópicos demonstrando os benefícios imediatos para a saúde da família (ar puro de verdade, prevenção de alergias, eliminação de ácaros e bactérias).
+        2. Opção 2: Foco na Economia ⚡ - Cabeçalho impactante sobre custos. Seção de tópicos explicando como a sujeira no aparelho faz o motor trabalhar o dobro, aumentando a conta de energia em até 30% e correndo risco de quebrar o compressor.
+        3. Opção 3: Lembrete Rápido 📅 - Lembrete amigável direto informando que faz exatamente ${recurrenceMonths} meses desde a última manutenção, com uma lista rápida e desenhada com emojis mostrando as vantagens combinadas de saúde e economia.
+        4. Opção 4: Benefícios Claros ✨ - Um resumo em tópicos ilustrados unindo a redução imediata de ácaros e bactérias e a economia de luz de até 30% para motivar o cliente a responder no ato.
 
         Retorne a resposta estritamente em formato JSON com o seguinte esquema (uma lista com exatamente os 4 modelos):
         [
           {
             "id": "saude",
             "titulo": "Opção 1: Foco na Saúde 🍃",
-            "mensagem": "Texto do modelo 1 aqui..."
+            "mensagem": "Texto do modelo 1 estruturado com emojis aqui..."
           },
           {
             "id": "energia",
             "titulo": "Opção 2: Foco na Economia ⚡",
-            "mensagem": "Texto do modelo 2 aqui..."
+            "mensagem": "Texto do modelo 2 estruturado com emojis aqui..."
           },
           {
             "id": "direto",
             "titulo": "Opção 3: Lembrete Rápido 📅",
-            "mensagem": "Texto do modelo 3 aqui..."
+            "mensagem": "Texto do modelo 3 estruturado com emojis aqui..."
           },
           {
             "id": "beneficios",
             "titulo": "Opção 4: Benefícios Claros ✨",
-            "mensagem": "Texto do modelo 4 aqui..."
+            "mensagem": "Texto do modelo 4 estruturado com emojis aqui..."
           }
         ]
         Retorne APENAS o JSON válido. Sem explicações ou blocos de markdown adicionais.
@@ -248,10 +253,10 @@ Análise automatizada de extratos corporativos em lote.
   // API Route: PDF/Text Bank Statement Extraction and Classification via Gemini
   app.post("/api/gemini/parse-extrato", async (req, res) => {
     try {
-      const { text, fileName } = req.body;
+      const { text, fileBase64, fileMimeType, fileName } = req.body;
 
-      if (!text) {
-        return res.status(400).json({ error: "O texto do extrato é obrigatório." });
+      if (!text && !fileBase64) {
+        return res.status(400).json({ error: "O texto ou o arquivo em base64 do extrato é obrigatório." });
       }
 
       if (!ai) {
@@ -264,29 +269,43 @@ Análise automatizada de extratos corporativos em lote.
 
       const prompt = `
       Você é um analisador e classificador de extratos bancários de alta precisão para a empresa R.A Climatização.
-      Sua tarefa é extrair transações financeiras (compras, despesas) a partir do texto de extrato fornecido abaixo.
+      Sua tarefa é extrair transações financeiras (compras, despesas) de climatização ou do dia a dia a partir do extrato bancário/fatura fornecido.
       Se o nome do arquivo foi fornecido, use-o como contexto para identificar o banco (por exemplo: nubank, inter, carrefour, c6, bmg).
-
-      TEXTO DO EXTRATO BANCÁRIO / DOCUMENTO:
-      """
-      ${text}
-      """
 
       Nome do arquivo de origem: ${fileName || "Não fornecido"}
 
       REGRAS DE CLASSIFICAÇÃO:
-      1. Identifique os cartões correspondentes aos lançamentos (IDs permitidos: nubank, inter, carrefour, c6, bmg).
+      1. Identifique os cartões correspondentes aos lançamentos (IDs permitidos: nubank, inter, carrefour, c6, bmg). Se não conseguir identificar o cartão pelo cabeçalho ou contexto do arquivo, use o cartão selecionado ou infira baseado na data/origem.
       2. Converta as datas para o formato ISO YYYY-MM-DD. Se a data estiver no formato "DD/MM" (ex: "15/06"), assuma o ano de 2026 (ex: "2026-06-15").
-      3. Extraia o valor correto como número de ponto flutuante positivo.
+      3. Extraia o valor correto como número de ponto flutuante positivo (ex: 150.00). Ignore sinais de menos ou parênteses se for apenas uma indicação de débito.
       4. Categorize as despesas entre as opções válidas: "Peças", "Combustível", "Ferramentas", "Alimentação" ou "Outros".
-      5. Se a transação não estiver clara ou não for de compra, ignore-a (como saldos ou transferências recebidas).
+      5. Se a transação não estiver clara ou não for de compra (ex: saldos, transferências recebidas, depósitos ou pagamentos de fatura), ignore-a completamente.
 
       Retorne estritamente um JSON contendo uma lista de transações conforme o esquema configurado.
       `;
 
+      let contents: any;
+      if (fileBase64 && fileMimeType) {
+        contents = {
+          parts: [
+            {
+              inlineData: {
+                data: fileBase64,
+                mimeType: fileMimeType
+              }
+            },
+            {
+              text: prompt
+            }
+          ]
+        };
+      } else {
+        contents = `${prompt}\n\nTEXTO DO EXTRATO BANCÁRIO / DOCUMENTO:\n"""\n${text}\n"""`;
+      }
+
       const response = await ai.models.generateContent({
         model: "gemini-3.5-flash",
-        contents: prompt,
+        contents: contents,
         config: {
           responseMimeType: "application/json",
           responseSchema: {

@@ -32,6 +32,23 @@ export default function Estoque({
   const [valorCusto, setValorCusto] = useState<number>(0);
   const [valorVenda, setValorVenda] = useState<number>(0);
 
+  const alert = (msg: string) => {
+    try {
+      window.alert(msg);
+    } catch (e) {
+      console.warn("Alert blocked by sandbox, logged message:", msg, e);
+    }
+  };
+
+  const confirm = (msg: string): boolean => {
+    try {
+      return window.confirm(msg);
+    } catch (e) {
+      console.warn("Confirm blocked by sandbox, defaulting to true:", msg, e);
+      return true;
+    }
+  };
+
   // Open creation
   const handleOpenCreate = () => {
     setEditingPart(null);

@@ -22,3 +22,166 @@
   background: #94a3b8;
 }
 
+/* Professional Print Styles for Letterhead / Budget PDF Generation */
+@media print {
+  /* Enforce original colors and background gradients in PDF */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+
+  html, body {
+    background: #ffffff !important;
+    color: #0f172a !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    height: auto !important;
+    font-size: 11pt !important;
+  }
+
+  /* Completely hide all UI wrapper elements, sidebar, header, etc. */
+  aside, header, footer, nav, .print\:hidden, .print-hidden, button, select, input, textarea {
+    display: none !important;
+  }
+
+  /* Specifically hide the editing form column on the left and filters */
+  .lg\:col-span-5, .bg-blue-50, .bg-white.p-4.rounded-xl.border, .no-print {
+    display: none !important;
+  }
+
+  /* Target standard containers so they don't break print flow or create blank pages */
+  #app-root {
+    display: block !important;
+    position: static !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+
+  #app-root > aside {
+    display: none !important;
+  }
+
+  #app-root > main {
+    display: block !important;
+    position: static !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+
+  #app-root > main > header,
+  #app-root > main > div.px-8,
+  #app-root > main > div:not(.flex-1) {
+    display: none !important;
+  }
+
+  #app-root > main > div.flex-1 {
+    display: block !important;
+    position: static !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+
+  /* Inside the viewport content div */
+  #app-root > main > div.flex-1 > div {
+    display: block !important;
+    position: static !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+
+  /* Handle Orcamentos column grid parent when printing */
+  .grid-cols-1.lg\:grid-cols-12, .grid {
+    display: block !important;
+  }
+
+  .lg\:col-span-7 {
+    display: block !important;
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* The wrapper div containing the print sheet */
+  .bg-slate-100 {
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+    display: block !important;
+    width: 100% !important;
+    height: auto !important;
+  }
+
+  /* Style the print sheet perfectly for A4 */
+  #print-sheet {
+    display: block !important;
+    position: relative !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-height: 297mm !important;
+    padding: 15mm !important; /* Standard professional internal margins */
+    margin: 0 !important;
+    background-color: #ffffff !important;
+    border: none !important;
+    box-shadow: none !important;
+    page-break-inside: avoid !important;
+    page-break-after: avoid !important;
+  }
+
+  /* Style the work order print area perfectly */
+  #print-area {
+    display: block !important;
+    position: relative !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-height: 297mm !important;
+    padding: 15mm !important;
+    margin: 0 !important;
+    background-color: #ffffff !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+
+  /* Prevent page cuts in table rows, signatures, and descriptions */
+  tr, table, blockquote, pre, .avoid-break {
+    page-break-inside: avoid !important;
+  }
+
+  thead {
+    display: table-header-group !important;
+  }
+
+  p, h1, h2, h3, h4, h5, h6 {
+    orphans: 3;
+    widows: 3;
+  }
+}
+

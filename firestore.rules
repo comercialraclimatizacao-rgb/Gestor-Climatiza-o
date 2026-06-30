@@ -1,0 +1,37 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /clientes/{document} {
+      allow read, write: if true;
+    }
+    match /equipamentos/{document} {
+      allow read, write: if true;
+    }
+    match /tecnicos/{document} {
+      allow read, write: if true;
+    }
+    match /pecas/{document} {
+      allow read, write: if true;
+    }
+    match /agendamentos/{document} {
+      allow read, write: if true;
+    }
+    match /ordens_servico/{document} {
+      allow read, write: if true;
+    }
+    match /notificacoes/{document} {
+      allow read, write: if true;
+    }
+    match /config/{document} {
+      allow read, write: if true;
+    }
+    match /orcamentos/{document} {
+      allow read, write: if true;
+    }
+    
+    // Default deny catch-all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

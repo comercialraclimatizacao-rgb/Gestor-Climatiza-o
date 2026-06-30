@@ -17,6 +17,23 @@ export default function Configuracoes({
   exportDatabase,
   importDatabase
 }: ConfiguracoesProps) {
+  const alert = (msg: string) => {
+    try {
+      window.alert(msg);
+    } catch (e) {
+      console.warn("Alert blocked by sandbox, logged message:", msg, e);
+    }
+  };
+
+  const confirm = (msg: string): boolean => {
+    try {
+      return window.confirm(msg);
+    } catch (e) {
+      console.warn("Confirm blocked by sandbox, defaulting to true:", msg, e);
+      return true;
+    }
+  };
+
   // Form States using official EmpresaConfig keys
   const [nomeEmpresa, setNomeEmpresa] = useState(empresaConfig.nome_empresa);
   const [cnpj, setCnpj] = useState(empresaConfig.cnpj);

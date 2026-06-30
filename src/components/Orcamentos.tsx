@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   FileText, Plus, Trash2, Printer, Check, Copy, Sparkles, 
-  Settings2, User, Cpu, ShieldCheck, DollarSign, Calendar, FileCheck, Info
+  Settings2, User, Cpu, ShieldCheck, DollarSign, Calendar, FileCheck, Info,
+  Search, Eye, Edit, ArrowLeft, CheckCircle2, XCircle, Clock, AlertCircle
 } from 'lucide-react';
 import { Cliente, Equipamento, OrdemServico, EmpresaConfig } from '../types';
 
@@ -10,6 +11,8 @@ interface OrcamentosProps {
   equipamentos: Equipamento[];
   ordensServico: OrdemServico[];
   empresaConfig: EmpresaConfig;
+  savedOrcamentos: SavedOrcamento[];
+  onSaveOrcamentos: (list: SavedOrcamento[]) => void;
 }
 
 interface ItemOrcamento {
@@ -19,12 +22,69 @@ interface ItemOrcamento {
   valor_unitario: number;
 }
 
+export interface SavedOrcamento {
+  id: string;
+  numero: string;
+  clienteId: string;
+  clienteNome: string;
+  clienteTel: string;
+  clienteEnd: string;
+  equipamentoId: string;
+  equipMarca: string;
+  equipModelo: string;
+  equipCapacidade: string;
+  dataEmissao: string;
+  validadeDias: number;
+  formaPagamento: string;
+  prazoExecucao: string;
+  garantiaMeses: number;
+  observacoes: string;
+  items: ItemOrcamento[];
+  descontoPercent: number;
+  subtotal: number;
+  valorDesconto: number;
+  valorTotal: number;
+  activeLayout: 'timbrado' | 'moderno' | 'tecnico' | 'minimalista';
+  status: 'pendente' | 'aprovado' | 'rejeitado';
+}
+
 export default function Orcamentos({
   clientes,
   equipamentos,
   ordensServico,
-  empresaConfig
+  empresaConfig,
+  savedOrcamentos,
+  onSaveOrcamentos
 }: OrcamentosProps) {
+  // Navigation & list states
+  const [viewMode, setViewMode] = useState<'list' | 'editor' | 'preview'>('list');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'todos' | 'pendente' | 'aprovado' | 'rejeitado'>('todos');
+  const [editingOrcamentoId, setEditingOrcamentoId] = useState<string | null>(null);
+  const [sandboxWarning, setSandboxWarning] = useState<string | null>(null);
+
+  const alert = (msg: string) => {
+    try {
+      window.alert(msg);
+    } catch (e) {
+      console.warn("Alert blocked by sandbox, logged message:", msg, e);
+    }
+  };
+
+  const confirm = (msg: string): boolean => {
+    try {
+      return window.confirm(msg);
+    } catch (e) {
+      console.warn("Confirm blocked by sandbox, defaulting to true:", msg, e);
+      return true;
+    }
+  };
+
+  // Sync to database
+  const saveToStorage = (list: SavedOrcamento[]) => {
+    onSaveOrcamentos(list);
+  };
+
   // Budget creation form state
   const [selectedClienteId, setSelectedClienteId] = useState<string>('');
   const [customClienteNome, setCustomClienteNome] = useState('');
@@ -78,7 +138,7 @@ export default function Orcamentos({
           setSelectedEquipamentoId(clientEqs[0].id);
           setCustomEquipMarca(clientEqs[0].marca);
           setCustomEquipModelo(clientEqs[0].modelo || '');
-          setCustomEquipCapacidade(clientEqs[0].capacidade || '12000 BTUs');
+          setCustomEquipCapacidade(clientEqs[0].capacidade_btu ? `${clientEqs[0].capacidade_btu} BTUs` : '12000 BTUs');
         } else {
           setSelectedEquipamentoId('');
           setCustomEquipMarca('');
@@ -103,7 +163,7 @@ export default function Orcamentos({
       if (eq) {
         setCustomEquipMarca(eq.marca);
         setCustomEquipModelo(eq.modelo || '');
-        setCustomEquipCapacidade(eq.capacidade || '12000 BTUs');
+        setCustomEquipCapacidade(eq.capacidade_btu ? `${eq.capacidade_btu} BTUs` : '12000 BTUs');
       }
     } else {
       setCustomEquipMarca('');
@@ -127,28 +187,28 @@ export default function Orcamentos({
         setSelectedEquipamentoId(eq.id);
         setCustomEquipMarca(eq.marca);
         setCustomEquipModelo(eq.modelo || '');
-        setCustomEquipCapacidade(eq.capacidade || '12000 BTUs');
+        setCustomEquipCapacidade(eq.capacidade_btu ? `${eq.capacidade_btu} BTUs` : '12000 BTUs');
       }
 
       // Convert checklist or description into items
       const osItems: ItemOrcamento[] = [];
       
-      if (os.descricao_servico) {
+      if (os.servico_realizado || os.problema_informado) {
         osItems.push({
           id: `os_serv_${Date.now()}`,
-          descricao: os.descricao_servico,
+          descricao: os.servico_realizado || os.problema_informado,
           quantidade: 1,
           valor_unitario: os.valor_total > 150 ? os.valor_total - 120 : os.valor_total
         });
       }
 
-      if (os.pecas_utilizadas && os.pecas_utilizadas.length > 0) {
-        os.pecas_utilizadas.forEach((p, idx) => {
+      if (os.pecas_usadas && os.pecas_usadas.length > 0) {
+        os.pecas_usadas.forEach((p, idx) => {
           osItems.push({
             id: `os_peca_${Date.now()}_${idx}`,
-            descricao: `Peça: ${p.nome_peca}`,
+            descricao: `Peça: ${p.nome}`,
             quantidade: p.quantidade,
-            valor_unitario: p.preco_unitario
+            valor_unitario: p.valor_unitario
           });
         });
       } else if (os.valor_total > 150) {
@@ -161,8 +221,167 @@ export default function Orcamentos({
       }
 
       setItems(osItems);
-      setObservacoes(`Orçamento extraído a partir da Ordem de Serviço #${os.codigo_os}. ${observacoes}`);
+      setObservacoes(`Orçamento extraído a partir da Ordem de Serviço #${os.numero_os}. ${observacoes}`);
     }
+  };
+
+  // CRUD Operational Handlers
+  const handleNewOrcamento = () => {
+    setEditingOrcamentoId(null);
+    setSelectedClienteId('');
+    setCustomClienteNome('');
+    setCustomClienteTel('');
+    setCustomClienteEnd('');
+    setSelectedEquipamentoId('');
+    setCustomEquipMarca('');
+    setCustomEquipModelo('');
+    setCustomEquipCapacidade('12000 BTUs');
+    setNumeroOrcamento(`ORC-${Math.floor(1000 + Math.random() * 9000)}`);
+    setDataEmissao(new Date().toISOString().split('T')[0]);
+    setValidadeDias(15);
+    setFormaPagamento('À vista com 5% de desconto, ou 3x sem juros no cartão');
+    setPrazoExecucao('1 a 2 dias úteis após aprovação');
+    setGarantiaMeses(12);
+    setObservacoes('Incluso materiais para fixação e furações em alvenaria. Não incluso pontos de energia elétrica por conta do cliente.');
+    setItems([
+      { id: '1', descricao: 'Higienização Completa de Ar Condicionado Split Evaporadora + Condensadora', quantidade: 1, valor_unitario: 180.00 },
+      { id: '2', descricao: 'Carga de Gás Ecológico R410A com detecção prévia de vazamentos', quantidade: 1, valor_unitario: 220.00 }
+    ]);
+    setDescontoPercent(0);
+    setActiveLayout('timbrado');
+    setViewMode('editor');
+  };
+
+  const handleEditOrcamento = (orc: SavedOrcamento) => {
+    setEditingOrcamentoId(orc.id);
+    setSelectedClienteId(orc.clienteId === 'custom' ? '' : orc.clienteId || '');
+    setCustomClienteNome(orc.clienteNome);
+    setCustomClienteTel(orc.clienteTel);
+    setCustomClienteEnd(orc.clienteEnd);
+    setSelectedEquipamentoId(orc.equipamentoId === 'custom' ? '' : orc.equipamentoId || '');
+    setCustomEquipMarca(orc.equipMarca);
+    setCustomEquipModelo(orc.equipModelo);
+    setCustomEquipCapacidade(orc.equipCapacidade);
+    setNumeroOrcamento(orc.numero);
+    setDataEmissao(orc.dataEmissao);
+    setValidadeDias(orc.validadeDias);
+    setFormaPagamento(orc.formaPagamento);
+    setPrazoExecucao(orc.prazoExecucao);
+    setGarantiaMeses(orc.garantiaMeses);
+    setObservacoes(orc.observacoes);
+    setItems(orc.items);
+    setDescontoPercent(orc.descontoPercent);
+    setActiveLayout(orc.activeLayout);
+    setViewMode('editor');
+  };
+
+  const handlePreviewOrcamento = (orc: SavedOrcamento) => {
+    setEditingOrcamentoId(orc.id);
+    setSelectedClienteId(orc.clienteId === 'custom' ? '' : orc.clienteId || '');
+    setCustomClienteNome(orc.clienteNome);
+    setCustomClienteTel(orc.clienteTel);
+    setCustomClienteEnd(orc.clienteEnd);
+    setSelectedEquipamentoId(orc.equipamentoId === 'custom' ? '' : orc.equipamentoId || '');
+    setCustomEquipMarca(orc.equipMarca);
+    setCustomEquipModelo(orc.equipModelo);
+    setCustomEquipCapacidade(orc.equipCapacidade);
+    setNumeroOrcamento(orc.numero);
+    setDataEmissao(orc.dataEmissao);
+    setValidadeDias(orc.validadeDias);
+    setFormaPagamento(orc.formaPagamento);
+    setPrazoExecucao(orc.prazoExecucao);
+    setGarantiaMeses(orc.garantiaMeses);
+    setObservacoes(orc.observacoes);
+    setItems(orc.items);
+    setDescontoPercent(orc.descontoPercent);
+    setActiveLayout(orc.activeLayout);
+    setViewMode('preview');
+  };
+
+  const handleDeleteOrcamento = (id: string) => {
+    if (window.confirm('Deseja realmente excluir este orçamento? Esta operação é irreversível.')) {
+      const updated = savedOrcamentos.filter(o => o.id !== id);
+      saveToStorage(updated);
+    }
+  };
+
+  const handleUpdateStatus = (id: string, newStatus: 'pendente' | 'aprovado' | 'rejeitado') => {
+    const updated = savedOrcamentos.map(o => o.id === id ? { ...o, status: newStatus } : o);
+    saveToStorage(updated);
+  };
+
+  const handleSaveOrcamento = () => {
+    if (!customClienteNome.trim()) {
+      alert('Por favor, informe o nome do cliente.');
+      return;
+    }
+    if (items.length === 0) {
+      alert('Por favor, adicione pelo menos um item ao orçamento.');
+      return;
+    }
+
+    const currentSubtotal = items.reduce((sum, item) => sum + (item.quantidade * item.valor_unitario), 0);
+    const currentDesconto = (currentSubtotal * descontoPercent) / 100;
+    const currentTotal = currentSubtotal - currentDesconto;
+
+    let updatedList: SavedOrcamento[];
+    if (editingOrcamentoId) {
+      updatedList = savedOrcamentos.map(o => o.id === editingOrcamentoId ? {
+        ...o,
+        numero: numeroOrcamento,
+        clienteId: selectedClienteId || 'custom',
+        clienteNome: customClienteNome,
+        clienteTel: customClienteTel,
+        clienteEnd: customClienteEnd,
+        equipamentoId: selectedEquipamentoId || 'custom',
+        equipMarca: customEquipMarca,
+        equipModelo: customEquipModelo,
+        equipCapacidade: customEquipCapacidade,
+        dataEmissao,
+        validadeDias,
+        formaPagamento,
+        prazoExecucao,
+        garantiaMeses,
+        observacoes,
+        items,
+        descontoPercent,
+        subtotal: currentSubtotal,
+        valorDesconto: currentDesconto,
+        valorTotal: currentTotal,
+        activeLayout
+      } : o);
+      alert('Orçamento atualizado com sucesso!');
+    } else {
+      const newOrc: SavedOrcamento = {
+        id: `orc_${Date.now()}`,
+        numero: numeroOrcamento,
+        clienteId: selectedClienteId || 'custom',
+        clienteNome: customClienteNome,
+        clienteTel: customClienteTel,
+        clienteEnd: customClienteEnd,
+        equipamentoId: selectedEquipamentoId || 'custom',
+        equipMarca: customEquipMarca,
+        equipModelo: customEquipModelo,
+        equipCapacidade: customEquipCapacidade,
+        dataEmissao,
+        validadeDias,
+        formaPagamento,
+        prazoExecucao,
+        garantiaMeses,
+        observacoes,
+        items,
+        descontoPercent,
+        subtotal: currentSubtotal,
+        valorDesconto: currentDesconto,
+        valorTotal: currentTotal,
+        activeLayout,
+        status: 'pendente'
+      };
+      updatedList = [newOrc, ...savedOrcamentos];
+      alert('Orçamento gerado e salvo com sucesso!');
+    }
+    saveToStorage(updatedList);
+    setViewMode('list');
   };
 
   // Items Handlers
@@ -195,63 +414,327 @@ export default function Orcamentos({
   const valorTotal = subtotal - valorDesconto;
 
   const handlePrint = () => {
-    window.print();
+    setSandboxWarning(null);
+    const element = document.getElementById('print-sheet');
+    const clientClean = (customClienteNome || 'Cliente').replace(/[^a-zA-Z0-9_\-]/g, "_").replace(/__+/g, "_");
+    const fileName = `Orcamento_${numeroOrcamento}_${clientClean}.pdf`.trim();
+
+    if (!element) {
+      setSandboxWarning("O elemento de layout do orçamento para PDF/Impressão não foi encontrado.");
+      return;
+    }
+
+    try {
+      if (typeof (window as any).html2pdf !== 'undefined') {
+        const opt = {
+          margin:       0,
+          filename:     fileName,
+          image:        { type: 'jpeg', quality: 0.98 },
+          html2canvas:  { 
+            scale: 2, 
+            useCORS: true, 
+            logging: false,
+            letterRendering: true
+          },
+          jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+        (window as any).html2pdf().set(opt).from(element).save();
+      } else {
+        throw new Error("Biblioteca html2pdf não carregada.");
+      }
+    } catch (pdfErr) {
+      console.warn("html2pdf failed or is not available. Falling back to native print:", pdfErr);
+      try {
+        const originalTitle = document.title;
+        document.title = `Orcamento_${numeroOrcamento}_${clientClean}`.trim();
+        window.print();
+        setTimeout(() => {
+          document.title = originalTitle;
+        }, 1000);
+      } catch (printErr) {
+        console.error("Native printing also failed or was blocked:", printErr);
+        setSandboxWarning(
+          "⚠️ O navegador bloqueou as ações de PDF e Impressão (comum no visualizador do AI Studio). " +
+          "Para salvar/imprimir com total suporte e sem restrições, clique em 'Abrir em Nova Aba' no canto superior direito do seu painel do AI Studio!"
+        );
+      }
+    }
   };
 
+  // List view first
+  if (viewMode === 'list') {
+    const filteredOrcamentos = savedOrcamentos.filter(orc => {
+      const matchQuery = 
+        orc.numero.toLowerCase().includes(searchQuery.toLowerCase()) || 
+        orc.clienteNome.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (orc.equipMarca && orc.equipMarca.toLowerCase().includes(searchQuery.toLowerCase()));
+      
+      const matchStatus = statusFilter === 'todos' || orc.status === statusFilter;
+      
+      return matchQuery && matchStatus;
+    });
+
+    return (
+      <div className="space-y-6 max-w-7xl mx-auto px-1 select-text">
+        {/* HEADER BANNER */}
+        <div className="bg-gradient-to-r from-blue-700 via-blue-800 to-indigo-950 p-5 rounded-2xl text-white shadow-md flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="space-y-1">
+            <h1 className="text-2xl font-bold font-sans tracking-tight">Gerenciamento de Orçamentos Comerciais</h1>
+            <p className="text-blue-100 text-xs font-sans max-w-2xl">
+              Crie, gerencie, visualize, edite e exporte orçamentos timbrados em formato PDF de alta conversão.
+            </p>
+          </div>
+          <div>
+            <button 
+              onClick={handleNewOrcamento}
+              className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-sm cursor-pointer"
+            >
+              <Plus className="w-4 h-4" /> Criar Novo Orçamento
+            </button>
+          </div>
+        </div>
+
+        {/* SEARCH & FILTERS */}
+        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-3xs flex flex-col sm:flex-row gap-3 justify-between items-center">
+          <div className="relative w-full sm:w-80">
+            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+            <input 
+              type="text" 
+              placeholder="Buscar por número ou cliente..." 
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium focus:outline-none focus:ring-1 focus:ring-blue-500 text-slate-700 font-sans"
+            />
+          </div>
+
+          <div className="flex flex-wrap gap-1.5 w-full sm:w-auto">
+            <button
+              onClick={() => setStatusFilter('todos')}
+              className={`px-3 py-1.5 text-xs font-bold rounded-lg transition ${statusFilter === 'todos' ? 'bg-slate-900 text-white' : 'bg-slate-50 hover:bg-slate-100 text-slate-600 border border-slate-200'}`}
+            >
+              Todos ({savedOrcamentos.length})
+            </button>
+            <button
+              onClick={() => setStatusFilter('pendente')}
+              className={`px-3 py-1.5 text-xs font-bold rounded-lg transition flex items-center gap-1 ${statusFilter === 'pendente' ? 'bg-amber-500 text-white' : 'bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200'}`}
+            >
+              <Clock className="w-3.5 h-3.5" /> Pendentes ({savedOrcamentos.filter(o => o.status === 'pendente').length})
+            </button>
+            <button
+              onClick={() => setStatusFilter('aprovado')}
+              className={`px-3 py-1.5 text-xs font-bold rounded-lg transition flex items-center gap-1 ${statusFilter === 'aprovado' ? 'bg-emerald-600 text-white' : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200'}`}
+            >
+              <CheckCircle2 className="w-3.5 h-3.5" /> Aprovados ({savedOrcamentos.filter(o => o.status === 'aprovado').length})
+            </button>
+            <button
+              onClick={() => setStatusFilter('rejeitado')}
+              className={`px-3 py-1.5 text-xs font-bold rounded-lg transition flex items-center gap-1 ${statusFilter === 'rejeitado' ? 'bg-rose-600 text-white' : 'bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200'}`}
+            >
+              <XCircle className="w-3.5 h-3.5" /> Rejeitados ({savedOrcamentos.filter(o => o.status === 'rejeitado').length})
+            </button>
+          </div>
+        </div>
+
+        {/* BUDGETS TABLE / CARDS */}
+        {filteredOrcamentos.length === 0 ? (
+          <div className="bg-white rounded-xl p-12 text-center border border-slate-200">
+            <FileText className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+            <p className="text-sm font-bold text-slate-500">Nenhum orçamento encontrado</p>
+            <p className="text-xs text-slate-400 mt-1">Experimente mudar o filtro de busca ou crie um novo orçamento no botão acima.</p>
+          </div>
+        ) : (
+          <div className="bg-white rounded-xl border border-slate-200 shadow-2xs overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs border-collapse">
+                <thead>
+                  <tr className="bg-slate-50 border-b border-slate-200 text-slate-500 font-extrabold text-[10px] uppercase tracking-wider">
+                    <th className="py-3 px-4">Número</th>
+                    <th className="py-3 px-4">Cliente</th>
+                    <th className="py-3 px-4">Equipamento</th>
+                    <th className="py-3 px-4">Data Emissão</th>
+                    <th className="py-3 px-4 text-right">Valor Total</th>
+                    <th className="py-3 px-4 text-center">Status</th>
+                    <th className="py-3 px-4 text-center">Ações</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 font-medium">
+                  {filteredOrcamentos.map(orc => (
+                    <tr key={orc.id} className="hover:bg-slate-50/50 transition">
+                      <td className="py-3.5 px-4 font-mono font-bold text-blue-600">{orc.numero}</td>
+                      <td className="py-3.5 px-4 text-slate-800">
+                        <div className="font-bold">{orc.clienteNome}</div>
+                        <div className="text-[10px] text-slate-400">{orc.clienteTel}</div>
+                      </td>
+                      <td className="py-3.5 px-4 text-slate-600">
+                        {orc.equipMarca ? `${orc.equipMarca} ${orc.equipModelo}` : 'Nenhum especificado'}
+                      </td>
+                      <td className="py-3.5 px-4 text-slate-500">
+                        {orc.dataEmissao.split('-').reverse().join('/')}
+                      </td>
+                      <td className="py-3.5 px-4 text-right font-mono font-bold text-slate-900 text-sm">
+                        R$ {orc.valorTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                      </td>
+                      <td className="py-3.5 px-4 text-center">
+                        <select
+                          value={orc.status}
+                          onChange={e => handleUpdateStatus(orc.id, e.target.value as any)}
+                          className={`px-2 py-1 rounded text-[10px] font-bold focus:outline-none cursor-pointer ${
+                            orc.status === 'aprovado' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
+                            orc.status === 'rejeitado' ? 'bg-rose-50 text-rose-700 border border-rose-200' :
+                            'bg-amber-50 text-amber-700 border border-amber-200'
+                          }`}
+                        >
+                          <option value="pendente">⏳ Pendente</option>
+                          <option value="aprovado">✅ Aprovado</option>
+                          <option value="rejeitado">❌ Rejeitado</option>
+                        </select>
+                      </td>
+                      <td className="py-3.5 px-4 text-center">
+                        <div className="flex items-center justify-center gap-1.5">
+                          <button
+                            onClick={() => handlePreviewOrcamento(orc)}
+                            title="Visualizar e Imprimir"
+                            className="p-1.5 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded transition cursor-pointer"
+                          >
+                            <Eye className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            onClick={() => handleEditOrcamento(orc)}
+                            title="Editar Orçamento"
+                            className="p-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded transition cursor-pointer"
+                          >
+                            <Edit className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteOrcamento(orc.id)}
+                            title="Excluir Orçamento"
+                            className="p-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded transition cursor-pointer"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // Edit or Preview Mode
   return (
     <div className="space-y-6 max-w-7xl mx-auto px-1 print:p-0 print:bg-white select-text">
       
-      {/* HEADER BANNER - Hidden on Print */}
-      <div className="bg-gradient-to-r from-blue-700 via-blue-800 to-indigo-950 p-5 rounded-2xl text-white shadow-md flex flex-col md:flex-row md:items-center justify-between gap-4 print:hidden">
-        <div className="space-y-1">
-          <h1 className="text-2xl font-bold font-sans tracking-tight">Gerador de Orçamentos com Papel Timbrado</h1>
-          <p className="text-blue-100 text-xs font-sans max-w-2xl">
-            Crie propostas de altíssima conversão técnica para seus clientes. Alterne instantaneamente entre os 4 layouts de timbrados oficiais da R.A Climatização e mande por WhatsApp ou imprima.
-          </p>
+      {sandboxWarning && (
+        <div className="bg-amber-50 border-l-4 border-amber-500 p-4 rounded-xl print:hidden flex items-start gap-3 shadow-xs">
+          <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+          <div className="text-xs text-amber-800">
+            <span className="font-bold">Aviso Importante:</span> {sandboxWarning}
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          <button 
-            onClick={handlePrint}
-            className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-sm cursor-pointer"
-          >
-            <Printer className="w-4 h-4" /> Imprimir / Salvar PDF
-          </button>
-        </div>
-      </div>
-
-      {/* QUICK PRE-FILL ACTION - Hidden on Print */}
-      <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 print:hidden">
+      )}
+      
+      {/* HEADER BAR - Hidden on Print */}
+      <div className="bg-white border border-slate-200 p-4 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 print:hidden shadow-xs">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-blue-100 text-blue-800 rounded-lg shrink-0">
-            <Sparkles className="w-5 h-5 animate-pulse" />
-          </div>
+          <button
+            onClick={() => setViewMode('list')}
+            className="p-2 bg-slate-50 hover:bg-slate-100 text-slate-700 rounded-xl transition cursor-pointer border border-slate-200 flex items-center justify-center"
+            title="Voltar para a Lista"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </button>
           <div>
-            <h3 className="text-xs font-bold text-blue-900 uppercase tracking-wide">Importar de Ordem de Serviço</h3>
-            <p className="text-[11px] text-blue-700 mt-0.5">Selecione uma OS cadastrada para preencher o orçamento instantaneamente.</p>
+            <h1 className="text-sm font-extrabold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+              <FileText className="w-4 h-4 text-blue-600" />
+              {viewMode === 'preview' ? 'Visualização do Orçamento' : (editingOrcamentoId ? `Editar Orçamento ${numeroOrcamento}` : 'Gerar Novo Orçamento')}
+            </h1>
+            <p className="text-xs text-slate-500 mt-0.5">
+              {viewMode === 'preview' 
+                ? `Visualizando proposta de papel timbrado #${numeroOrcamento}`
+                : 'Defina as condições, adicione serviços e acompanhe em tempo real.'}
+            </p>
           </div>
         </div>
-        
-        <select
-          value={selectedOSId}
-          onChange={e => handleLoadFromOS(e.target.value)}
-          className="px-3 py-1.5 bg-white border border-blue-200 rounded-lg text-xs font-bold text-blue-900 focus:outline-none focus:ring-1 focus:ring-blue-500 w-full sm:w-72"
-        >
-          <option value="">-- Selecionar OS --</option>
-          {ordensServico.map(os => {
-            const client = clientes.find(c => c.id === os.cliente_id);
-            return (
-              <option key={os.id} value={os.id}>
-                OS #{os.codigo_os} - {client?.nome || 'Cliente'} (R$ {os.valor_total})
-              </option>
-            );
-          })}
-        </select>
+
+        <div className="flex items-center gap-2">
+          {viewMode === 'editor' ? (
+            <>
+              <button
+                onClick={() => setViewMode('list')}
+                className="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold transition cursor-pointer"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleSaveOrcamento}
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-sm cursor-pointer"
+              >
+                <Check className="w-4 h-4" /> Salvar Orçamento
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                onClick={() => {
+                  const found = savedOrcamentos.find(o => o.id === editingOrcamentoId);
+                  if (found) handleEditOrcamento(found);
+                }}
+                className="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold transition flex items-center gap-1 cursor-pointer"
+              >
+                <Edit className="w-4 h-4" /> Editar
+              </button>
+              <button 
+                onClick={handlePrint}
+                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-sm cursor-pointer"
+              >
+                <Printer className="w-4 h-4" /> Imprimir / Salvar PDF
+              </button>
+            </>
+          )}
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+      {/* QUICK PRE-FILL ACTION - Hidden on Print - Only show in Editor & if not editing an existing one */}
+      {viewMode === 'editor' && !editingOrcamentoId && (
+        <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 print:hidden">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-blue-100 text-blue-800 rounded-lg shrink-0">
+              <Sparkles className="w-5 h-5 animate-pulse" />
+            </div>
+            <div>
+              <h3 className="text-xs font-bold text-blue-900 uppercase tracking-wide">Importar de Ordem de Serviço</h3>
+              <p className="text-[11px] text-blue-700 mt-0.5">Selecione uma OS cadastrada para preencher o orçamento instantaneamente.</p>
+            </div>
+          </div>
+          
+          <select
+            value={selectedOSId}
+            onChange={e => handleLoadFromOS(e.target.value)}
+            className="px-3 py-1.5 bg-white border border-blue-200 rounded-lg text-xs font-bold text-blue-900 focus:outline-none focus:ring-1 focus:ring-blue-500 w-full sm:w-72 cursor-pointer"
+          >
+            <option value="">-- Selecionar OS --</option>
+            {ordensServico.map(os => {
+              const client = clientes.find(c => c.id === os.cliente_id);
+              return (
+                <option key={os.id} value={os.id}>
+                  OS #{os.numero_os} - {client?.nome || 'Cliente'} (R$ {os.valor_total})
+                </option>
+              );
+            })}
+          </select>
+        </div>
+      )}
+
+      <div className={viewMode === 'preview' ? "flex flex-col items-center gap-6" : "grid grid-cols-1 lg:grid-cols-12 gap-6 items-start"}>
         
-        {/* LEFT COLUMN: EDITING FORM - 5 cols - Hidden on Print */}
-        <div className="lg:col-span-5 space-y-6 print:hidden">
+        {/* LEFT COLUMN: EDITING FORM - 5 cols - Hidden on Print - Only in Editor mode */}
+        {viewMode === 'editor' && (
+          <div className="lg:col-span-5 space-y-6 print:hidden">
           
           {/* CLIENT & EQUIPMENT INFO */}
           <div className="bg-white p-5 rounded-xl border border-slate-200 space-y-4 shadow-2xs">
@@ -516,9 +999,10 @@ export default function Orcamentos({
           </div>
 
         </div>
+        )}
 
-        {/* RIGHT COLUMN: TIMBRADO PREVIEW FRAME - 7 cols */}
-        <div className="lg:col-span-7 space-y-4">
+        {/* RIGHT COLUMN: TIMBRADO PREVIEW FRAME */}
+        <div className={viewMode === 'preview' ? "w-full space-y-4 max-w-[220mm]" : "lg:col-span-7 space-y-4"}>
           
           {/* SWITCH TIMBRADO LAYOUT BAR - Hidden on Print */}
           <div className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-2xs print:hidden space-y-2">
@@ -1050,6 +1534,34 @@ export default function Orcamentos({
               )}
 
             </div>
+
+            {/* Stylesheet specific for Budget PDF printing */}
+            <style>{`
+              @media print {
+                body * {
+                  visibility: hidden !important;
+                }
+                #print-sheet, #print-sheet * {
+                  visibility: visible !important;
+                }
+                #print-sheet {
+                  position: absolute !important;
+                  left: 0 !important;
+                  top: 0 !important;
+                  width: 100% !important;
+                  max-width: 100% !important;
+                  box-shadow: none !important;
+                  border: none !important;
+                  padding: 15mm !important;
+                  margin: 0 !important;
+                  background: white !important;
+                }
+                .no-print {
+                  display: none !important;
+                }
+              }
+            `}</style>
+
           </div>
 
         </div>
